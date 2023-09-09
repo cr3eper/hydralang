@@ -1,0 +1,38 @@
+
+f(x) = x^2 + 2x + 5
+// f(x) = Add(Add(Pow(Var(x), Number(2)), Mul(Number(2), Var(x))), Number(5))   => Change to infix notation to make easier to follow
+// f(x) = (Var(x) Pow Number(2)) Add (Number(2) Mul Var(x)) Add Number(5)       => If we add precedence we can remove nesting, in this case Add and Sub have lower precedence than Pow and Mul
+// f(x) = Var(x) Pow Number (2) Add Number (2) Mul Var(x) Add Number(5)         => Ideal tree here 
+// f(x) = Var x Pow Number 2 Add Number 2 Mul Var x Add Number 5                => Technically possible and very haskell like, not sure I like it though
+
+f = Var(x) Pow Number(2) Add Number(2) Mul Var(x) Add Number(5)                       => Notice how f is shorthand for f(x)
+f(Number(5)) = Number(5) Pow Number(2) Add Number(2) Mul Number(5) Add Number(5)      => Auto eval/simplify should be implemented transition below, auto type coercsion will be implemented later
+
+    => Number(25) Add Number(10) Add Number(5)
+    => Number(40)
+
+f(Number(2) Mul Var(x)) = (Number(2) Mul Var(x)) Pow Number(2) Add Number(2) Mul Var(x) Add Number(5)
+f(2x) = (2x)^2 + 2(2(x)) + 5
+
+// { } means we are destructoring an expression, we attempt to match and if we cannot we move to next definition, if there is no match then we return Undefined symbol
+// Any(a) is used in destructoring and means "Anything goes here" a param can be used for recursive evaluation
+derive({ Number(a) Mul Var(x) Pow(Number(n))  }) = { (Number(a) Mul Number(n)) Mul Var(x) Pow   }
+
+f(t) = [xt, yt, zt] + [1, 2, 3]
+f(Var(t)) = Vector ( Var (x) Mul Var(t), Var (y) Mul Var (t), Var (z) Mul Var (t)) Add Vector (Number(1), Number(2), Number(3))
+
+
+// Example of expand formula, for now ignoring infix notation
+derive( {Num:a}Pow({Var:x}, {Num:n}) ) = (a * n)x^(n-1)
+
+// With infix? Brackets are Technically not needed
+derive( {Num:a}({Var:x} Pow {Num:n}) ) = (a * n)x^(n-1)
+
+// Could make it an actual expression again but with templates
+derive( {Num:a} * {Var:x} Pow {Num: n} ) = (a * n)x^(n-1)
+
+
+// I like this, seems elegant and less programmery, not sure how practical it is yet
+// I think where clauses can be a good location to apply constraints as well such as "n is Num and x > 0"
+// Might need to rename Nums to constants, little unsure about this because technically they're constant integers, perhaps I need to change how I'm working with Ints vs Floats
+derive( a * x ^ n) = (a * n) * x^(n-1) where {a is Num, x is Var, n is Num}
