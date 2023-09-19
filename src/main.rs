@@ -5,25 +5,64 @@
 
 mod vector;
 mod parsing;
-
+mod stack;
 
 use std::cmp::Ordering;
 
+use nom::{error::{ParseError, FromExternalError, Error, ErrorKind}, IResult};
 use quick_error::quick_error;
+use stack::Stack;
 
+
+use rustyline::DefaultEditor;
+use shellfish::{Shell, handler::DefaultHandler, Command};
+
+#[macro_use]
+extern crate shellfish;
+
+// Massively oversimplified error handling for the time being
 quick_error!{
     #[derive(Debug)]
-    pub enum ParseError {
+    pub enum MathError {
 
         InvalidOperation{
             display("Invalid operation")
         }
 
-        NomError(err: nom::error::ErrorKind){
+        NomError(err: ErrorKind){
             display("Nom parsing error: {:?}", err)
             from()
         }
 
+        UnexpectedError(message: String){
+            display("Unexpected Error {}", message)
+        }
+
+    }
+}
+
+impl ParseError<&str> for MathError {
+
+    fn from_error_kind(input: &str, kind: nom::error::ErrorKind) -> Self {
+        Self::NomError(kind)
+    }
+
+    fn append(input: &str, kind: nom::error::ErrorKind, other: Self) -> Self {
+        todo!()
+    }
+}
+
+impl From<Error<&str>> for MathError {
+
+    fn from(value: Error<&str>) -> Self {
+        Self::NomError(value.code)
+    }
+}
+
+impl From<Error<(&str, Stack<Node>)>> for MathError {
+
+    fn from(value: Error<(&str, Stack<Node>)>) -> Self {
+        Self::NomError(value.code)
     }
 }
 
@@ -472,13 +511,53 @@ mod tests{
 }
 
 
+struct Parser {
+    text: String
+}
 
+impl Parser {
 
-fn main() {
+    fn set_text(&mut self, text: String) -> &mut Self {
+        self.text = text;
+        self
+    } 
 
+    fn parse(&self) -> Result<Node, >
+
+    fn parse_and_eval_command(_state: &mut u64, args: Vec<String>) -> Result<(), Box<dyn std::error::Error>>{
     
+        let mut text = String::new();
+        for arg in args {
+            text = text + &arg;
+        }
+
+        let  result = parsing::parser::parse_expression_wrap(args[0].as_str())?;
+    
+        
+    
+        Ok(())
+    
+    }
+}
 
 
 
+fn main() -> Result<(), Box<dyn std::error::Error>>{
+
+    // Define a shell
+    let mut shell = Shell::new_with_handler(
+        0_u64,
+        "<[Shellfish Example]>-$ ",
+        DefaultHandler::default(),
+        DefaultEditor::new()?,
+    );
+
+    shell.commands.insert("eval", Command::new(
+        "Parses and evaluates and expression".to_string(),
+        parse_and_eval_command
+    ));
+
+
+    Ok(())
 
 }

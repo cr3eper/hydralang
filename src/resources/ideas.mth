@@ -18,7 +18,7 @@ f(2x) = (2x)^2 + 2(2(x)) + 5
 // Any(a) is used in destructoring and means "Anything goes here" a param can be used for recursive evaluation
 derive({ Number(a) Mul Var(x) Pow(Number(n))  }) = { (Number(a) Mul Number(n)) Mul Var(x) Pow   }
 
-f(t) = [xt, yt, zt] + [1, 2, 3]
+f(t) = [xt, yt, zt] + [1, 2, 3] where {t is Var}
 f(Var(t)) = Vector ( Var (x) Mul Var(t), Var (y) Mul Var (t), Var (z) Mul Var (t)) Add Vector (Number(1), Number(2), Number(3))
 
 
@@ -35,4 +35,39 @@ derive( {Num:a} * {Var:x} Pow {Num: n} ) = (a * n)x^(n-1)
 // I like this, seems elegant and less programmery, not sure how practical it is yet
 // I think where clauses can be a good location to apply constraints as well such as "n is Num and x > 0"
 // Might need to rename Nums to constants, little unsure about this because technically they're constant integers, perhaps I need to change how I'm working with Ints vs Floats
-derive( a * x ^ n) = (a * n) * x^(n-1) where {a is Num, x is Var, n is Num}
+derive(a * x ^ n) = (a * n) * x^(n-1) where {a is Num, x is Var, n is Num}
+derive(a * b) = derive(a) * b + derive(b * a) where {a is Any, b is Any}
+derive(a / b) = (derive(a)*b - derive(b)*a) / b^2 where {a is Any, b is Any}
+
+fib(n) = fib(n - 1) + fib(n - 2) where {n > 1}
+fib(n) = 1 where {n <= 1}
+
+// What would chain rule look like? How can we define this elegantly?
+derive(f(v)) where {f is Function, v is Any} = derive(v) * Derive(f())
+
+// Could give newline characters a meaning for axb matrices
+// Only floor is that this will not extend to axbxc matrics
+m = [
+    1, 2, 3
+    4, 5, 6
+    7, 8, 9
+]
+
+// This could work for a 3x3x3
+m = [
+    [1, 2, 3], [1, 2, 3], [1, 2, 3]
+    [1, 2, 3], [1, 2, 3], [1, 2, 3]
+    [1, 2, 3], [1, 2, 3], [1, 2, 3]
+]
+
+// This could also work
+m = [1, 2, 3, 4, 5, 6, 7, 8, 9] where m is Mat(3, 3)
+
+// Ideas for builders and closures, not sure exacly how this will look at this point
+line(m, c) = (t) = (m * t + c) where {m is Vec(n), t is Num, c is Vec(n), n is Num}
+
+// Define a 3d line like so
+f = line([1, 2, 3], [0, 0, 0])
+
+// we want to apply the plot context not the 'simplify' context
+plot { f }

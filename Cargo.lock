@@ -144,6 +144,7 @@ version = "0.1.0"
 dependencies = [
  "nom",
  "quick-error",
+ "rustyline",
  "serde",
  "shellfish",
 ]
