@@ -1,0 +1,26 @@
+WHITESPACE = _{ " " }
+COMMENT = _{ "#" ~ (!("#"|NEWLINE) ~ ANY)* ~ ("#"|NEWLINE) } 
+
+number        = @{ ASCII_DIGIT+ }
+operator      =  { "+" | "-" | "*" | "/" | "^" | "$" }
+var           = @{ !("where") ~ ASCII_ALPHA+ }
+vector        =  { "[" ~ expr ~ ("," ~ expr)* ~ "]" }
+function_call =  { function_name ~ "(" ~ expr ~ ("," ~ expr)* ~ ")" }
+
+
+token = _{ number | operator | function_call | var | vector }
+
+constraint      =  { "where" ~ "{" ~ (constraint_item ~ ("," ~ constraint_item)*){0, 1} ~ "}" }
+constraint_item = _{ typebound | range }
+typebound       = @{ ASCII_ALPHA+ ~ " "+ ~ "is" ~ " "+ ~ type }
+comparison      =  { "<=" | ">=" | "<" | ">" }
+range           =  { (number ~ comparison){0, 1} ~ var ~ (comparison ~ number){0, 1} }
+type            =  { "Num" | "Var" | "Any" | "Constant" }
+
+function_name = @{ ASCII_ALPHA+ }
+function_def  =  { function_head ~ statement }
+function_head = ${ function_name ~ "(" ~ " "* ~ var ~ (" "* ~ "," ~ " "* ~ var ~ " "*)* ~ ")" ~ " "* ~ "=" }
+
+expr      = { token+ }
+statement = { expr ~ constraint{0, 1} ~ NEWLINE* }
+script    = { (function_def | statement)+ }

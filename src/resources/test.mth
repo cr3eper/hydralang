@@ -1,8 +1,22 @@
 
-{1.0 2.0 3.0} + {1.0 1.0 1.0} - {1.0, 1.0, 1.0}
+10 + 22 + x + 1 - 10 where { x < 10, x is Num }
 
-f(t) = {1.0, -1.0, 1.0} * t + {1.0, 2.0, 3.0}
+[1 , 2 + x, 4] * t
 
-f(x, y) = 
+f(x) = x^2 +2*x where { x < 10 } # silly constraint but still valid
+10 + f(5 + 4)
+f(5)
+
+g(x) = f(x + 1)
+
+derive(a * x^n, x) = (a * n) * x^(n - 1) where { a is Constant, n is Constant}     # basic polynomial derivative
+derive(a * b, x) = derive(a, x) * b + a * derive(b, x) where { #constraint# }            # product rule, requires a valid constraint such that it's not applied inifinitely 
+
+fact(n) = fact(n - 1) * fact(n) where { n > 1}                                  # factorial definition
+fact(n) = 1 where { n <= 1 }                                                    # base cases use where constraint
+                                                                                # fact(1) = 1 (perhaps a good idea?)
+
+
+
 
 

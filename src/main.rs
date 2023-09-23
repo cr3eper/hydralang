@@ -6,6 +6,7 @@
 mod vector;
 mod parsing;
 mod stack;
+mod expression_builder;
 
 use std::cmp::Ordering;
 
@@ -20,61 +21,11 @@ use shellfish::{Shell, handler::DefaultHandler, Command};
 #[macro_use]
 extern crate shellfish;
 
-// Massively oversimplified error handling for the time being
-quick_error!{
-    #[derive(Debug)]
-    pub enum MathError {
-
-        InvalidOperation{
-            display("Invalid operation")
-        }
-
-        NomError(err: ErrorKind){
-            display("Nom parsing error: {:?}", err)
-            from()
-        }
-
-        UnexpectedError(message: String){
-            display("Unexpected Error {}", message)
-        }
-
-    }
-}
-
-impl ParseError<&str> for MathError {
-
-    fn from_error_kind(input: &str, kind: nom::error::ErrorKind) -> Self {
-        Self::NomError(kind)
-    }
-
-    fn append(input: &str, kind: nom::error::ErrorKind, other: Self) -> Self {
-        todo!()
-    }
-}
-
-impl From<Error<&str>> for MathError {
-
-    fn from(value: Error<&str>) -> Self {
-        Self::NomError(value.code)
-    }
-}
-
-impl From<Error<(&str, Stack<Node>)>> for MathError {
-
-    fn from(value: Error<(&str, Stack<Node>)>) -> Self {
-        Self::NomError(value.code)
-    }
-}
-
 
 
 #[derive(Debug, Clone)]
 pub enum Node {
-    Add(Box<Node>, Box<Node>),
-    Sub(Box<Node>, Box<Node>),
-    Mul(Box<Node>, Box<Node>),
-    Div(Box<Node>, Box<Node>),
-    Pow(Box<Node>, Box<Node>),
+    Op(String, Box<Node>, Box<Node>),
     Neg(Box<Node>),
     Num(i64),
     Float(f64),
@@ -83,16 +34,21 @@ pub enum Node {
     Expand(Box<Node>), // Expand is used for pattern matching in expressions
 }
 
+// Compares expression equivalence not mathmatical equivalence ie 4 / 2 = 2 would be false in this context
 pub trait DeepEq {
 
     fn deq(&self, other: &Self) -> bool;
 
 }
 
+pub enum Constraint {
+    Range(i64, i64),
+    Type(String)
+}
 
-pub enum Statement {
-    Function{ args: Box<Node>, derivation: Box<Node> },
-    Derivation{ derivation: Box<Node> }
+pub struct Statement{
+    expr: Box<Node>,
+    constraint: Option<Vec<Constraint>>
 }
 
 
@@ -125,11 +81,7 @@ impl PartialEq for Node {
             (Num(_), Num(_)) => true,
             (Var(_), Var(_)) => true,
             (Vector(_), Vector(_)) => true,
-            (Add(_,_), Add(_, _)) => true,
-            (Sub(_,_), Sub(_, _)) => true,
-            (Mul(_,_), Mul(_, _)) => true,
-            (Div(_,_), Div(_, _)) => true,
-            (Pow(_,_), Pow(_, _)) => true,
+            (Op(s1, _, _), Op(s2, _, _)) => s1 == s2,
             (Neg(_), Neg(_)) => true,
             (Expand(_), Expand(_)) => true,
             (Float(_), Float(_)) => true,
@@ -147,11 +99,7 @@ impl DeepEq for Node {
             (Num(a), Num(b)) => a == b,
             (Var(a), Var(b)) => a == b,
             (Vector(v1), Vector(v2)) => v1.len() == v2.len() && v1.iter().zip(v2.iter()).all(|(a, b)| a.deq(b)),
-            (Add(a1,b1), Add(a2, b2)) => a1.deq(a2) && b1.deq(b2),
-            (Sub(a1,b1), Sub(a2, b2)) => a1.deq(a2) && b1.deq(b2),
-            (Mul(a1,b1), Mul(a2, b2)) => a1.deq(a2) && b1.deq(b2),
-            (Div(a1,b1), Div(a2, b2)) => a1.deq(a2) && b1.deq(b2),
-            (Pow(a1,b1), Pow(a2, b2)) => a1.deq(a2) && b1.deq(b2),
+            (Op(s1, a1, a2), Op(s2, b1, b2)) => s1 == s2 && a1.deq(b1) && a2.deq(b2),
             (Neg(a), Neg(b)) => a.deq(b),
             (Expand(_), _) => true,
             (_, Expand(_)) => true,
@@ -166,24 +114,26 @@ impl PartialOrd for Node {
 
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
 
-        fn give_rank(node: &Node) -> i32 {
-            use Node::*;
-            match node {
-                Num(_) => 10,
-                Var(_) => 10,
-                Float(_) => 10,
-                Vector(_) => 0,
-                Add(_,_) => 1,
-                Sub(_,_) => 1,
-                Mul(_,_) => 2,
-                Div(_,_) => 3,
-                Pow(_,_) => 4,
-                Neg(_) => 5,
-                Expand(_) => 6,
-            }
-        }
+        // fn give_rank(node: &Node) -> i32 {
+        //     use Node::*;
+        //     match node {
+        //         Num(_) => 10,
+        //         Var(_) => 10,
+        //         Float(_) => 10,
+        //         Vector(_) => 0,
+        //         Add(_,_) => 1,
+        //         Sub(_,_) => 1,
+        //         Mul(_,_) => 2,
+        //         Div(_,_) => 3,
+        //         Pow(_,_) => 4,
+        //         Neg(_) => 5,
+        //         Expand(_) => 6,
+        //     }
+        // }
 
-        give_rank(self).partial_cmp(&give_rank(other))
+        // give_rank(self).partial_cmp(&give_rank(other))
+
+        todo!()
     }
 }
 
@@ -238,7 +188,7 @@ fn evaluate_derivation(statement: Statement, allow_floating_numbers: bool) -> Op
 
         fn add_fractions(&self, a: Node, b: Node) -> Node {
             use Node::*;
-            use derivation_builder::*;
+            use expression_builder::*;
 
             match (a, b) {
                 (Div(box num1, box div1), Div(box num2, box div2)) if div1.deq(&div2) => div(add(num1, num2), div1),
@@ -249,7 +199,7 @@ fn evaluate_derivation(statement: Statement, allow_floating_numbers: bool) -> Op
 
         fn eval(&self, derivation: Node) -> Node {
             use Node::*;
-            use derivation_builder::*;
+            use expression_builder::*;
 
             
 
@@ -337,55 +287,6 @@ fn evaluate_derivation(statement: Statement, allow_floating_numbers: bool) -> Op
 
 
 
-mod derivation_builder {
-    use super::*;
-
-    pub fn add(left: Node, right: Node) -> Node {
-        Node::Add(Box::new(left), Box::new(right))
-    }
-
-    pub fn sub(left: Node, right: Node) -> Node {
-        Node::Sub(Box::new(left), Box::new(right))
-    }
-
-    pub fn mul(left: Node, right: Node) -> Node {
-        Node::Mul(Box::new(left), Box::new(right))
-    }
-
-    pub fn div(left: Node, right: Node) -> Node {
-        Node::Div(Box::new(left), Box::new(right))
-    }
-
-    pub fn pow(base: Node, exponent: Node) -> Node {
-        Node::Pow(Box::new(base), Box::new(exponent))
-    }
-
-    pub fn neg(node: Node) -> Node {
-        Node::Neg(Box::new(node))
-    }
-
-    pub fn num(n: i64) -> Node {
-        Node::Num(n)
-    }
-
-    pub fn var(s: String) -> Node {
-        Node::Var(s)
-    }
-
-    pub fn vector(v: Vec<Node>) -> Node {
-        Node::Vector(v)
-    }
-
-    pub fn vec3(x: i64, y: i64, z: i64) -> Node {
-        vector(vec![num(x), num(y), num(z)])
-    }
-
-    pub fn vec2(x: i64, y: i64) -> Node {
-        vector(vec![num(x), num(y)])
-    }
-
-}
-
 
 
 
@@ -393,7 +294,7 @@ mod derivation_builder {
 #[cfg(test)]
 mod tests{
     use super::*;
-    use derivation_builder::*;
+    use expression_builder::*;
 
 
     #[test]
@@ -522,7 +423,6 @@ impl Parser {
         self
     } 
 
-    fn parse(&self) -> Result<Node, >
 
     fn parse_and_eval_command(_state: &mut u64, args: Vec<String>) -> Result<(), Box<dyn std::error::Error>>{
     
@@ -531,9 +431,6 @@ impl Parser {
             text = text + &arg;
         }
 
-        let  result = parsing::parser::parse_expression_wrap(args[0].as_str())?;
-    
-        
     
         Ok(())
     
@@ -541,23 +438,3 @@ impl Parser {
 }
 
 
-
-fn main() -> Result<(), Box<dyn std::error::Error>>{
-
-    // Define a shell
-    let mut shell = Shell::new_with_handler(
-        0_u64,
-        "<[Shellfish Example]>-$ ",
-        DefaultHandler::default(),
-        DefaultEditor::new()?,
-    );
-
-    shell.commands.insert("eval", Command::new(
-        "Parses and evaluates and expression".to_string(),
-        parse_and_eval_command
-    ));
-
-
-    Ok(())
-
-}

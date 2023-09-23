@@ -69,5 +69,12 @@ line(m, c) = (t) = (m * t + c) where {m is Vec(n), t is Num, c is Vec(n), n is N
 // Define a 3d line like so
 f = line([1, 2, 3], [0, 0, 0])
 
-// we want to apply the plot context not the 'simplify' context
-plot { f }
+// default compute context is 'eval'
+10x + 5
+is equivalent to:
+eval { 10x + 5 } where { useFloats = false }
+
+
+
+// we want to apply the plot context not the 'eval' context
+plot { y = f(x) } where { -10 <= x <= 10, -10 <= y <= 10, sampling = 1000 }
