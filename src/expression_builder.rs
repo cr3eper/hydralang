@@ -23,7 +23,7 @@ pub fn pow(base: Node, exponent: Node) -> Node {
 }
 
 pub fn neg(node: Node) -> Node {
-    Node::Neg(Box::new(node))
+    Node::LOp("-".to_string(), Box::new(node))
 }
 
 pub fn num(n: i64) -> Node {

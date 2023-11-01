@@ -1,9 +1,9 @@
 
-10 + 22 + x + 1 - 10 where { x < 10, x is Num }
+10 + 22 + x + 1 - 10
 
-[1 , 2 + x, 4] * t
+(1 , 2 + x, 4) * t
 
-f(x) = x^2 +2*x where { x < 10 } # silly constraint but still valid
+f(x) = x^2 +2*x where { x < 10 }
 10 + f(5 + 4)
 f(5)
 
@@ -12,11 +12,31 @@ g(x) = f(x + 1)
 derive(a * x^n, x) = (a * n) * x^(n - 1) where { a is Constant, n is Constant}     # basic polynomial derivative
 derive(a * b, x) = derive(a, x) * b + a * derive(b, x) where { #constraint# }            # product rule, requires a valid constraint such that it's not applied inifinitely 
 
-fact(n) = fact(n - 1) * fact(n) where { n > 1}                                  # factorial definition
+fact(n) = fact(n - 1) * fact(n) where { n > 1 }                                 # factorial definition
 fact(n) = 1 where { n <= 1 }                                                    # base cases use where constraint
                                                                                 # fact(1) = 1 (perhaps a good idea?)
 
 
+sqrt(v) = v^(1/2)
+
+
+
+
+eval(a + b) = rust{ |Num(a), Num(b)| Num(a + b) } where { a is Num, b is Num }
+
+eq(a + b) = b + a where { a is Num }
+eq(a * b) = b * a where { }
+eq()
+
+sum(f, i, n) = f(i) + sum(f, i + 1, n) where { i <= n, f is Function }
+sum(f, i, n) = f + sum(f, i + 1, n) where { i <= n, f is not Function }
+sum(f, i, n) = 0 where { i > n } 
+
+spline(p) =  where { p is Vec(Vec(2)), ydd = calcydd(p) }
+
+
+
+fmt()
 
 
 

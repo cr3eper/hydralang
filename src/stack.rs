@@ -20,6 +20,14 @@ impl<T> Stack<T> {
         self.data.pop()
     }
 
+    pub fn peek(&self) -> Option<&T>{
+        if self.len() == 0 {
+            None
+        }else{
+            Some(&self.data[self.len() - 1])
+        }
+    }
+
     pub fn len(&self) -> usize {
         self.data.len()
     }

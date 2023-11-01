@@ -1,6 +1,7 @@
 
 #![feature(box_patterns)]
 #![feature(iter_intersperse)]
+#![feature(iterator_try_collect)]
 #![allow(dead_code)]
 
 mod vector;
@@ -14,8 +15,6 @@ use nom::{error::{ParseError, FromExternalError, Error, ErrorKind}, IResult};
 use quick_error::quick_error;
 use stack::Stack;
 
-
-use rustyline::DefaultEditor;
 use shellfish::{Shell, handler::DefaultHandler, Command};
 
 #[macro_use]
@@ -26,7 +25,7 @@ extern crate shellfish;
 #[derive(Debug, Clone)]
 pub enum Node {
     Op(String, Box<Node>, Box<Node>),
-    Neg(Box<Node>),
+    LOp(String, Box<Node>),
     Num(i64),
     Float(f64),
     Var(String),
@@ -34,7 +33,7 @@ pub enum Node {
     Expand(Box<Node>), // Expand is used for pattern matching in expressions
 }
 
-// Compares expression equivalence not mathmatical equivalence ie 4 / 2 = 2 would be false in this context
+// Compares expression equivalence not mathmatical equivalence ie: 4 / 2 = 2 would be false in this context
 pub trait DeepEq {
 
     fn deq(&self, other: &Self) -> bool;
@@ -46,9 +45,15 @@ pub enum Constraint {
     Type(String)
 }
 
-pub struct Statement{
-    expr: Box<Node>,
-    constraint: Option<Vec<Constraint>>
+pub struct Expression {
+    expr: Node
+}
+
+pub struct FunctionDef {
+    name: String,
+    args: Vec<String>,
+    expr: Expression,
+    constraint: Constraint
 }
 
 
@@ -66,6 +71,11 @@ fn gcd(a: i64, b: i64) -> i64{
     }
 } 
 
+impl PartialEq for Expression {
+    fn eq(&self, other: &Self) -> bool {
+        self.expr.deq(&other.expr)
+    }
+}
 
 
 // fn parse_operation(input: &str) -> IResult<&str, TokenOperation, ParseError> {
@@ -82,7 +92,7 @@ impl PartialEq for Node {
             (Var(_), Var(_)) => true,
             (Vector(_), Vector(_)) => true,
             (Op(s1, _, _), Op(s2, _, _)) => s1 == s2,
-            (Neg(_), Neg(_)) => true,
+            (LOp(s1, _), LOp(s2, _)) => s1 == s2,
             (Expand(_), Expand(_)) => true,
             (Float(_), Float(_)) => true,
             _ => false
@@ -100,7 +110,7 @@ impl DeepEq for Node {
             (Var(a), Var(b)) => a == b,
             (Vector(v1), Vector(v2)) => v1.len() == v2.len() && v1.iter().zip(v2.iter()).all(|(a, b)| a.deq(b)),
             (Op(s1, a1, a2), Op(s2, b1, b2)) => s1 == s2 && a1.deq(b1) && a2.deq(b2),
-            (Neg(a), Neg(b)) => a.deq(b),
+            (LOp(s1, a), LOp(s2, b)) => s1 == s2 && a.deq(b),
             (Expand(_), _) => true,
             (_, Expand(_)) => true,
             (Float(f1), Float(f2)) => f1 == f2,
@@ -114,26 +124,29 @@ impl PartialOrd for Node {
 
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
 
-        // fn give_rank(node: &Node) -> i32 {
-        //     use Node::*;
-        //     match node {
-        //         Num(_) => 10,
-        //         Var(_) => 10,
-        //         Float(_) => 10,
-        //         Vector(_) => 0,
-        //         Add(_,_) => 1,
-        //         Sub(_,_) => 1,
-        //         Mul(_,_) => 2,
-        //         Div(_,_) => 3,
-        //         Pow(_,_) => 4,
-        //         Neg(_) => 5,
-        //         Expand(_) => 6,
-        //     }
-        // }
+        fn give_rank(node: &Node) -> i32 {
+            use Node::*;
+            match node {
+                Num(_) => 0,
+                Var(_) => 0,
+                Float(_) => 0,
+                Vector(_) => 0,
+                Op(s, _, _) => {
+                    match s.as_str() {
+                        "+" => 1,
+                        "-" => 1,
+                        "*" => 2,
+                        "/" => 2,
+                        "^" => 3,
+                        _ => panic!("Unexpected Operation")
+                    }
+                },
+                LOp(_, _) => 5,
+                Expand(_) => 6,
+            }
+        }
 
-        // give_rank(self).partial_cmp(&give_rank(other))
-
-        todo!()
+        give_rank(self).partial_cmp(&give_rank(other))
     }
 }
 
@@ -145,7 +158,7 @@ impl ToString for Node {
         use Node::*;
 
         fn wrap_if_lower(parent: &Node, child: &Node) -> String {
-            if *child < *parent {
+            if *child > *parent {
                 format!("({})", child.to_string())
             }else{
                 format!("{}", child.to_string())
@@ -154,140 +167,24 @@ impl ToString for Node {
 
 
         match &self {
-            Add(box a, box b) => format!("{} + {}", wrap_if_lower(self, a), wrap_if_lower(self, b)),
-            Sub(box a, box b) => format!("{} - {}", wrap_if_lower(self, a), wrap_if_lower(self, b)),
-            Mul(box a, box b) => {
-                match (a, b) {
-                    (Num(a), Var(b)) => format!("{}{}", wrap_if_lower(self, &Num(*a)), wrap_if_lower(self, &Var(b.clone()))), // Ooof
-                    (Var(a), Num(b)) => format!("{}{}", wrap_if_lower(self, &Num(*b)), wrap_if_lower(self, &Var(a.clone()))), // Ooof
-                    (a, b) => format!("{} * {}", wrap_if_lower(self, a), wrap_if_lower(self, b)),
+
+            Op(s, box a, box b) => {
+                if ["+", "-", "*", "/"].contains(&s.as_str()) {
+                    format!("{} {} {}", wrap_if_lower(self, a), s, wrap_if_lower(self, b))
+                }else {
+                    format!("{}{}{}", wrap_if_lower(self, a), s, wrap_if_lower(self, b))
                 }
             },
-            Div(box a, box b) => format!("{} / {}", wrap_if_lower(self, a), wrap_if_lower(self, b)), // May have fancy pants divisions one day, for now much too complicated
-            Pow(box a, box b) => format!("{}^{}", wrap_if_lower(self, a), wrap_if_lower(self, b)),
-            Neg(box a) => format!("-{}", wrap_if_lower(self, a)),
+            LOp(op, box a) => format!("${op}{}", wrap_if_lower(self, a)),
             Num(a) => format!("{}", a),
             Float(a) => format!("{}", a),
             Var(a) => format!("{}", a),
-            Vector(v) => format!("[{}]", v.iter().map(|v| v.to_string()).intersperse(", ".to_string()).collect::<String>()),
+            Vector(v) => format!("[{}]", v.iter().map(|v|
+                 v.to_string()).intersperse(", ".to_string()).collect::<String>()),
             Expand(e) => format!("{{{}}}", e.to_string()),
         }
     }
 }
-
-
-
-// This effectively serves as a "simplify" operation in a lot of cases, it may "simpliy" to a simple number or may be much more complex
-fn evaluate_derivation(statement: Statement, allow_floating_numbers: bool) -> Option<Node> {
-
-    struct EvalContext {
-        allow_floating_numbers: bool
-    }
-
-    impl EvalContext{
-
-        fn add_fractions(&self, a: Node, b: Node) -> Node {
-            use Node::*;
-            use expression_builder::*;
-
-            match (a, b) {
-                (Div(box num1, box div1), Div(box num2, box div2)) if div1.deq(&div2) => div(add(num1, num2), div1),
-                (Div(box num1, box div1), Div(box num2, box div2)) => self.eval(div(add(mul(num1, div2.clone()), mul(num2, div1.clone())), mul(div1, div2))),
-                (a, b) => add(a, b)
-            }
-        }
-
-        fn eval(&self, derivation: Node) -> Node {
-            use Node::*;
-            use expression_builder::*;
-
-            
-
-            match derivation {
-                Add(a,b) => {
-                    let a = self.eval(*a);
-                    let b = self.eval(*b);
-                    match (a, b) {
-                        (Num(a), Num(b)) => Num(a + b),
-                        (Div(box Num(a1), box Num(b1)), Div(box Num(a2), box Num(b2))) => self.add_fractions(div(num(a1), num(b2)), div(num(a2), num(b1))),
-                        (Div(box Num(a1), box Num(b1)), Num(a2)) => self.add_fractions(div(num(a1), num(b1)), div(num(a2), num(1))),
-                        (Num(a2), Div(box Num(a1), box Num(b1))) => self.add_fractions(div(num(a1), num(b1)), div(num(a2), num(1))),
-                        (a, b) => Add(Box::new(a), Box::new(b))
-                    }
-                },
-                Sub(a, b) => {
-                    let a = self.eval(*a);
-                    let b = self.eval(*b);
-                    match (a, b) {
-                        (Num(a), Num(b)) => Num(a - b),
-                        (Div(box Num(a1), box Num(b1)), Div(box Num(a2), box Num(b2))) => self.add_fractions(div(num(a1), num(b2)), div(neg(num(a2)), num(b1))),
-                        (Div(box Num(a1), box Num(b1)), Num(a2)) => self.add_fractions(div(num(a1), num(b1)), div(neg(num(a2)), num(1))),
-                        (Num(a2), Div(box Num(a1), box Num(b1))) => self.add_fractions(div(num(a1), num(b1)), div(neg(num(a2)), num(1))),
-                        (a, b) => Sub(Box::new(a), Box::new(b))
-                    }
-                },
-                Mul(a, b) => {
-                    let a = self.eval(*a);
-                    let b = self.eval(*b);
-                    match (a, b) {
-                        (Num(a), Num(b)) => Num(a * b),
-                        (a, b) => Mul(Box::new(a), Box::new(b))
-                    }
-                },
-                Div(a, b) => {
-                    let a = self.eval(*a);
-                    let b = self.eval(*b);
-                    match (a, b) {
-                        (Num(a), Num(b)) if a % b == 0 => Num(a / b),
-                        (Num(a), Num(b)) => {
-                            if !self.allow_floating_numbers {
-                                let divisor = gcd(a, b);
-                                Div(Box::new(Num(a / divisor)), Box::new(Num(b / divisor)))
-                            } else {
-                                Float(a as f64 / b as f64)
-                            }
-                        },
-                        (a, b) => Div(Box::new(a), Box::new(b))
-                    }
-                },
-                Pow(a, b) => {
-                    let a = self.eval(*a);
-                    let b = self.eval(*b);
-                    match (a, b) {
-                        (Num(a), Num(b)) if b >= 0 => Num(a.pow(b as u32)),
-                        (Num(a), Num(b)) if b < 0 => div(num(1), num(a.pow(b.abs() as u32))),
-                        (Div(box Num(numerator), box Num(divisor)), Num(b)) if b >= 0 => self.eval(div(num(numerator.pow(b as u32)), num(divisor.pow(b as u32)))),
-                        (a, b) => Pow(Box::new(a), Box::new(b))
-                    }
-                },
-                Neg(n) => {
-                    let n = self.eval(*n);
-                    match n {
-                        Num(n) => Num(-n),
-                        n => Neg(Box::new(n))
-                    }
-                }
-                Num(n) => Num(n),
-                Float(n) => Float(n),
-                Var(a) => Var(a),
-                Vector(v) => Vector(v.clone()),
-                Expand(_) => panic!("Expand should not be present in a evaluation (it is only used for pattern matching)"),
-            }
-        }
-    }
-
-    if let Statement::Derivation{ derivation } = statement { 
-        let context = EvalContext { allow_floating_numbers };
-        Some(context.eval(*derivation))
-    } else {
-        None
-    }
-}
-
-
-
-
-
 
 
 
@@ -299,7 +196,7 @@ mod tests{
 
     #[test]
     fn parse_derivation() {
-        let test = "f(x) = x^2 + 2x + 5";
+        let test = "f(x) = x^2 + 2*x + 5";
 
         let expected_derivation = add(
             add(
@@ -327,114 +224,12 @@ mod tests{
 
     }
 
-    #[test]
-    fn odd_order_derivation() {
-
-        let derivation = div(add(num(5), num(4)), mul(num(2), num(3)));
-        println!("{}", derivation.to_string());
-
-        let result = evaluate_derivation(Statement::Derivation { derivation: Box::new(derivation.clone()) }, false);
-        
-        println!("{} = {}", derivation.to_string(), result.clone().unwrap().to_string());
-
-        assert_eq!("(5 + 4) / (2 * 3)", derivation.to_string());
-        assert_eq!("3 / 2", result.unwrap().to_string());
-
-    }
-
-    #[test]
-    fn complicated_evaluation() {
-        let derivation = add(sub(add(
-            num(4),
-            div(num(8), add(mul(num(2), sub(pow(num(6), num(2)), num(35))), div(pow(num(3), num(4)), num(9))))
-        ),
-        pow(num(2), add(num(3), num(4)))
-        ), pow(num(5), num(3)));
-
-        let result = evaluate_derivation(Statement::Derivation { derivation: Box::new(derivation.clone()) }, false);
-
-        println!("{} = \n\t{}", derivation.to_string(), result.clone().unwrap().to_string());
-
-        assert!(result.unwrap().deq(&div(num(19), num(11))));
-    }
-
-    #[test]
-    fn add_fractions() {
-        let derivation = add(div(num(1), num(2)), div(num(1), num(3)));
-        
-        let result = evaluate_derivation(Statement::Derivation { derivation: Box::new(derivation.clone()) }, false);
-
-        println!("{} = \n\t{}", derivation.to_string(), result.clone().unwrap().to_string());
-
-        assert!(result.unwrap().deq(&div(num(5), num(6))));
-    }
-
-    #[test]
-    fn test_expr() {
-        let derivation = sub(div(num(32), num(9)), num(4));
-
-        let result = evaluate_derivation(Statement::Derivation { derivation: Box::new(derivation.clone()) }, false);
-
-        println!("{} = \n\t{}", derivation.to_string(), result.clone().unwrap().to_string());
-
-    }
-
-    #[test]
-    fn test_expr_2() {
-        let derivation = pow(add(num(2), add(div(num(2), num(3)), div(num(4), num(9)))), num(2));
-
-        let result = evaluate_derivation(Statement::Derivation { derivation: Box::new(derivation.clone()) }, false);
-
-        println!("{} = \n\t{}", derivation.to_string(), result.clone().unwrap().to_string());
-
-    }
-
-    #[test]
-    fn test_expr_3() {
-        let derivation = mul(div(num(16), num(9)), div(num(9), num(28)));
-
-        let result = evaluate_derivation(Statement::Derivation { derivation: Box::new(derivation.clone()) }, false);
-
-        println!("{} = \n\t{}", derivation.to_string(), result.clone().unwrap().to_string());
-
-    }
-
-    #[test]
-    fn test_expr_4() {
-        let derivation = div(num(144), num(252));
-
-        let result = evaluate_derivation(Statement::Derivation { derivation: Box::new(derivation.clone()) }, false);
-
-        println!("{} = \n\t{}", derivation.to_string(), result.clone().unwrap().to_string());
-
-    }
 
 }
 
 
-struct Parser {
-    text: String
-}
-
-impl Parser {
-
-    fn set_text(&mut self, text: String) -> &mut Self {
-        self.text = text;
-        self
-    } 
-
-
-    fn parse_and_eval_command(_state: &mut u64, args: Vec<String>) -> Result<(), Box<dyn std::error::Error>>{
+fn main() {
     
-        let mut text = String::new();
-        for arg in args {
-            text = text + &arg;
-        }
-
-    
-        Ok(())
-    
-    }
 }
 
 

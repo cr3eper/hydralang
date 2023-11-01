@@ -39,8 +39,16 @@ derive(a * x ^ n) = (a * n) * x^(n-1) where {a is Num, x is Var, n is Num}
 derive(a * b) = derive(a) * b + derive(b * a) where {a is Any, b is Any}
 derive(a / b) = (derive(a)*b - derive(b)*a) / b^2 where {a is Any, b is Any}
 
+
+// This approach works quite well for recursive funtion definitions
 fib(n) = fib(n - 1) + fib(n - 2) where {n > 1}
 fib(n) = 1 where {n <= 1}
+
+fact(n) = n * fact(n - 1) where { n > 0 }
+fact(n) = 1 where { n < 0 }
+
+
+
 
 // What would chain rule look like? How can we define this elegantly?
 derive(f(v)) where {f is Function, v is Any} = derive(v) * Derive(f())
@@ -75,6 +83,135 @@ is equivalent to:
 eval { 10x + 5 } where { useFloats = false }
 
 
+if x then a else b
+
+// for boolean algebra
+bool {
+    x = 1
+    y = 0
+    a = x & y
+
+}
+
 
 // we want to apply the plot context not the 'eval' context
-plot { y = f(x) } where { -10 <= x <= 10, -10 <= y <= 10, sampling = 1000 }
+plot { y = f(x) } where { -10 <= x <= 10, -10 <= y <= 10, sampling = 1000 }\
+
+fragshader(x, y) = [1, 0, 0, 1] * (64^2 - x^2 - y^2)^(1/2)    # Should produce a red circle?
+
+circle(c, p, r) = c * (r^2 - distance(p))
+
+
+distance(p) = map(p, (x) = x^2)
+
+// A builtin function for vector operations, takes v and applies f for each
+map(v, f) = ???
+
+type thing = circle(p, r) | box(p, b)
+
+fragshader(x, y, things) {
+    things.map()
+}
+
+// vectors are just brackets with multiple items right?? So the following should work:
+// This should be easily implemented at the parser level, just check for cases where length of vec = 1
+(1, 2, 3) * t = (1*t, 2*t, 3*t)
+(1 + 5) * t = ( 6 * t ) = 6 * t 
+
+// matrices would now look like: 
+m = (
+    1, 2, 3
+    4, 5, 6
+    7, 8, 9
+) * (
+    1, 2, 3
+    4, 5, 6, // Should trailing comma be optional?
+    7, 8, 9
+)
+
+// Also they could be defined like:
+// Which depending on the context may be less confusing
+m = ((1, 2, 3), (4, 5, 6), (7, 8, 9))
+
+// Perhaps square brackets should exist to enfore the matrix property??
+// So for Example
+m = [
+    1, 1
+    1, 1, 1
+    1
+] = [
+    1, 1, 0
+    1, 1, 1
+    1, 0, 0
+]
+
+// but this does not apply to vec
+v = (
+    1, 1
+    1, 1, 1
+    1
+) != (
+    1, 1, 0,
+    1, 1, 1,
+    1, 0, 0
+)
+
+// How can we do data structures, graph theory and FA theory?
+// Algebraic data types will be handy, so lets start with syntax for that:
+
+Maybe(x) = Some(x) | None
+
+map(Some(x), f) = Some(f(x))
+map(None, f) = None
+
+Typing and other constraints can be annoying to repeat, Perhaps we can scope these rules? But then the question becomes what else should we scope??
+
+// I think it's inevitable this language will have to have scoping, might as well make the format familiar to programmers
+Tape {
+
+    // Global constraints can be handy to avoid having to type lots and lots of where clauses
+    constraint { t is String }
+    constraint { op is Function }
+
+    // Lets define a simple FA, how should we do this?
+    // Tables and mixing with ADTs seems quite neat
+    // We could even overload function and state names perhaps? It should still be evident what is a function and what is a State
+    FA = A | B | C | D
+    T(A, "1") = B // This might be more versatile than the below, I don't see why it couldn't be used
+    T(A, t) = C where { t is "0" }
+    T(B, t) = B where { t is "1" }
+    T(B, t) = C where { t is "0" }
+    T(C, t) = D where { t is "1" | "0" }
+    T(D, t) = D
+
+
+    // Given this is a computer science topic this kind of stuff probably isn't out of reach for someone to understand but it does require concepts such as currying to be well understood
+    // Not sure if this is good or not, I'll look at it again later and decide how readable it is then
+
+    Tape = (transitions, state) => op => op(transitions, state) where { op is Function, transitions is Function }
+    Tape::getState(transitions, state) = state
+    Tape::next(transitions, state) = input = Tape(transitions, transitions(state, input))
+
+    F = Tape(T, A)
+    F(Tape::getState)
+    F = F(Tape::next)
+    F(Tape::getState)
+
+}
+
+2 = x * 25 // Eqaulity? 
+x = y / 2 = z + 4 // Triple equality?
+
+// If you type an expression that starts with an operation it means apply that operation to the previous equation, this is usefull for manipulating equalities
+// Note that the operation is applied to both sides
+// Example:
+
+2 = x * 25  # Returns Equality      2 = x * 25 
+/2          # Returns               1 = x * 25/2
+/(25/2)     # Returns               2/25 = x
+
+// Alternative syntax for non-equalities
+x * 25
+y = ans + 10    # Will evaluate to y = x*25 + 10
+
+
