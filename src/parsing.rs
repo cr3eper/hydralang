@@ -31,34 +31,19 @@ pub mod tokenizer {
         constraint: Constraint
     }
 
-    impl Token {
-
-        pub fn as_operation(&self) -> &str {
-            match self {
-                Token::Operation(op) => op.as_str(),
-                Token::Operand(_) => panic!("Attempted to unwrap token as an operation when it is not an operation"),
-            }
-        }
-
-        pub fn as_operand(&self) -> &OperandType {
-            match self {
-                Token::Operation(_) => panic!("Attempted to unwrap token as an operand when it is not an operand"),
-                Token::Operand(op) => op
-            }
-        }
-
-    }
-
-
-
-
     #[derive(Parser)]
     #[grammar = "resources/grammar.pest"]
     struct Tokenizer;
 
-    // TODO: Currently this only handles statements and function_def pairs are ignored. This will need to be revisited
-    pub fn tokenize_script(input: &str) -> Vec<TokenStream> {
+    pub struct TokenizedScript{
+        function_defs: Vec<TokenFunctionDef>,
+        expressions: Vec<TokenStream>
+    }
 
+    // TODO: Currently this only handles statements and function_def pairs are ignored. This will need to be revisited
+    pub fn tokenize_script(input: &str) -> TokenizedScript {
+
+        let mut function_defs = Vec::new();
         let mut token_streams = Vec::new();
 
         // TODO: Revisit Error Handling, for now we'll just panic
@@ -67,7 +52,21 @@ pub mod tokenizer {
 
         for line in parse.into_inner() {
             match line.as_rule() {
-                Rule::function_def => { /* Do Nothing for now TODO: Implement function definition parsing */ },
+                Rule::function_def => { 
+                    let mut iter = line.into_inner();
+                    let mut head = iter.next().unwrap();
+                    let mut iterhead = head.into_inner();
+                    let name = iterhead.next().unwrap().as_str().to_string();
+                    let mut args = Vec::new();
+                    for arg in iterhead {
+                        args.push(arg.as_str().to_string())
+                    }
+                    let statement = iter.next().unwrap();
+                    let tokens = shunting_yard(internal_tokenize(statement.into_inner().next().expect("Statement without expression should be impossible").into_inner()));
+                    
+                    
+                    function_defs.push(TokenFunctionDef { name: name, args: args, tokens: tokens, constraint: () })
+                 },
                 Rule::statement => {
                     let tokens = shunting_yard(internal_tokenize(line.into_inner().next().expect("Statement without expression should be impossible").into_inner()));
                     token_streams.push(tokens);
@@ -76,12 +75,15 @@ pub mod tokenizer {
             }
         }
 
-        token_streams
+        TokenizedScript { function_defs: function_defs, expressions: token_streams }
 
         
     }
 
-    pub fn tokenize_function(input: &str) -> TokenStream {
+    pub fn tokenize_function(input: &str) -> TokenFunctionDef {
+
+        let parse = Tokenizer::parse(Rule::function_def, input).expect("Failed Lexer Stage").next().unwrap();
+        todo!()
 
     }
 
@@ -91,6 +93,7 @@ pub mod tokenizer {
 
         shunting_yard(internal_tokenize(parse.into_inner().next().unwrap().into_inner()))
     }
+
 
     // Expect pest pairs to provide a stream of Tokens, if we're at the wrong level of abstraction we'll enounter an error
     fn internal_tokenize<'a>(expression: Pairs<'a, Rule>) -> TokenStream {
@@ -207,6 +210,24 @@ pub mod tokenizer {
         }
 
         result
+
+    }
+
+    impl Token {
+
+        pub fn as_operation(&self) -> &str {
+            match self {
+                Token::Operation(op) => op.as_str(),
+                Token::Operand(_) => panic!("Attempted to unwrap token as an operation when it is not an operation"),
+            }
+        }
+
+        pub fn as_operand(&self) -> &OperandType {
+            match self {
+                Token::Operation(_) => panic!("Attempted to unwrap token as an operand when it is not an operand"),
+                Token::Operand(op) => op
+            }
+        }
 
     }
 
