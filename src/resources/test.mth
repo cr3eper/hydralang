@@ -9,7 +9,7 @@ f(5)
 
 g(x) = f(x + 1)
 
-derive(a * x^n, x) = (a * n) * x^(n - 1) where { a is Constant, n is Constant}     # basic polynomial derivative
+derive(a * x^n, x) = (a * n) * x^(n - 1) where { a is Constant, n is Constant }     # basic polynomial derivative
 derive(a * b, x) = derive(a, x) * b + a * derive(b, x) where { #constraint# }            # product rule, requires a valid constraint such that it's not applied inifinitely 
 
 fact(n) = fact(n - 1) * fact(n) where { n > 1 }                                 # factorial definition
@@ -20,7 +20,7 @@ fact(n) = 1 where { n <= 1 }                                                    
 sqrt(v) = v^(1/2)
 
 
-
+f = a => b
 
 eval(a + b) = rust{ |Num(a), Num(b)| Num(a + b) } where { a is Num, b is Num }
 
@@ -34,6 +34,12 @@ sum(f, i, n) = 0 where { i > n }
 
 spline(p) =  where { p is Vec(Vec(2)), ydd = calcydd(p) }
 
+f(t) = t^2 + 2*t
+
+df/dt # unique eval rules for all variables starting with 'd'?, this could be very useful for calculus
+
+# Integrals will be done with function I
+I(f) 
 
 
 fmt()

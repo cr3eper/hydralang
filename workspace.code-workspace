@@ -1,0 +1,23 @@
+{
+	"folders": [
+		{
+			"path": "../../Personal/opengl_tut"
+		},
+		{
+			"path": "../../Personal/parkour"
+		},
+		{
+			"path": "../../Personal/newrlibcore"
+		},
+		{
+			"path": "../../Personal/matlib"
+		},
+		{
+			"path": "../../Personal/exprsh"
+		},
+		{
+			"path": "."
+		}
+	],
+    "settings": {}
+}

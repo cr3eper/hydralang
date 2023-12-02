@@ -1,6 +1,6 @@
 
 
-use super::*;
+use crate::model::expression::Node;
 
 pub fn add(left: Node, right: Node) -> Node {
     Node::Op("+".to_string(), Box::new(left), Box::new(right))
@@ -44,6 +44,10 @@ pub fn vec3(x: i64, y: i64, z: i64) -> Node {
 
 pub fn vec2(x: i64, y: i64) -> Node {
     vector(vec![num(x), num(y)])
+}
+
+pub fn func_call(name: String, args: Vec<Node>) -> Node {
+    Node::FunctionCall { name, args }
 }
 
 

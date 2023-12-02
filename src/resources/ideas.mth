@@ -215,3 +215,37 @@ x * 25
 y = ans + 10    # Will evaluate to y = x*25 + 10
 
 
+derive(a * x ^ n, x) = (a * n) * x ^ (n - 1) where { x is Variable, }  
+df(a + b, x) = df(a, x) + df(b, x)          # derivative works for addition and subtraction 
+df(a * b, x) = a * df(b, x) + df(a, x) * b  # product rule
+df(a / b) = # Definition of quotient rule
+
+
+# Currently I have no idea what the best way to define the chain rule would be
+df(f(u(x))) where { f(u) = # Some constraint that allows the application of chain rule }
+
+I've reached some issues with comparing expressions in the way I want to, obviously it has it's limitations but I want basic form differences to be recognized in pattern matching,
+ or better yet to be able to define handling of these form differnces easily in code
+
+Example:
+
+a * b = b * a
+
+seems simple enough, but consider the expression 
+a * b * c * d * e
+possible combinations include
+a * (b * (c * (d * e)))
+(a * b) * (c * (d * e))
+(a)
+etc..
+Due to the number of combinations I'm not sure a tree based approach is going to be efficient enough
+
+
+f(x) = a(x)
+f(x) = a(g(x))
+
+
+x^2 + y^2 = 4
+
+df/dx = -f(x)/x
+
