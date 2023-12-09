@@ -26,7 +26,7 @@ pub enum OperandType {
 // Maps to FunctionDef fairly easily, the distinction is just important in a few minor places
 pub struct TokenFunctionDef {
     pub name: String,
-    pub args: Vec<String>,
+    pub args: Vec<TokenStream>,
     pub tokens: TokenStream,
     pub constraints: Vec<Constraint>
 }
@@ -76,7 +76,8 @@ pub fn tokenize_script(input: &str) -> TokenizedScript {
                 let name = head.next().unwrap().as_str().to_string();
                 let mut args = Vec::new();
                 for arg in head {
-                    args.push(arg.as_str().to_string())
+                    let tokens: Vec<Token> = shunting_yard(internal_tokenize(arg.into_inner().next().expect("function argument without expression should be impossible").into_inner()));
+                    args.push(tokens);
                 }
                 let statement = func_def_iter.next().unwrap();
                 let tokens = shunting_yard(internal_tokenize(statement.into_inner().next().expect("Statement without expression should be impossible").into_inner()));
@@ -90,7 +91,7 @@ pub fn tokenize_script(input: &str) -> TokenizedScript {
                 function_defs.push(TokenFunctionDef { name: name, args: args, tokens: tokens, constraints: constraints })
                 },
             Rule::statement => {
-                let tokens = shunting_yard(internal_tokenize(line.into_inner().next().expect("Statement without expression should be impossible").into_inner()));
+                let tokens: Vec<Token> = shunting_yard(internal_tokenize(line.into_inner().next().expect("Statement without expression should be impossible").into_inner()));
                 token_streams.push(tokens);
             },
             _ => panic!("Unexpected rule at top level of parse tree")
@@ -325,7 +326,7 @@ mod tests {
         let expected = add(sub(add(num(5), div(num(10), num(20))),num(4)),var("a".to_string()));
 
 
-        assert!(result.deq(&expected));
+        assert!(result.deep_eq(&expected));
 
         println!("Result: {}", result.to_string());
         println!("Result: {:?}", result);

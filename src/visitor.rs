@@ -112,7 +112,7 @@ impl CommutativeExpressionMatcher {
     }
 
     pub fn matches(&self, e: &Expression) -> bool {
-        self.target.get_root_node().deq(e.get_root_node())
+        self.target.get_root_node().deep_eq(e.get_root_node())
     }
 
 }
@@ -144,10 +144,6 @@ mod tests {
 
         let parsed = parse_statement(test).unwrap();
         let result = visitor.visit(parsed.clone());
-
-        println!("Before: {}", parsed.to_string());
-        println!("Result: {}", result.to_string());
-        println!("Expected: {}", expect.to_string());
 
         assert_eq!(result, expect);
 

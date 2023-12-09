@@ -7,7 +7,7 @@ use crate::{model::expression::Node, visitor::ImmutableExpressionVisitor};
 /// This function trait can be a more expensive comparison since it often involves traversing the entire tree to determine if two trees are logically equivalent
 pub trait DeepEq {
 
-    fn deq(&self, other: &Self) -> bool;
+    fn deep_eq(&self, other: &Self) -> bool;
 
 }
 
@@ -25,14 +25,14 @@ pub trait StructuralEq {
 
 impl DeepEq for Node {
 
-    fn deq(&self, other: &Self) -> bool {
+    fn deep_eq(&self, other: &Self) -> bool {
         use Node::*;
         match (self, other) {
             (Num(a), Num(b)) => a == b,
             (Var(a), Var(b)) => a == b,
-            (Vector(v1), Vector(v2)) => v1.len() == v2.len() && v1.iter().zip(v2.iter()).all(|(a, b)| a.deq(b)),
-            (Op(s1, a1, a2), Op(s2, b1, b2)) => s1 == s2 && a1.deq(b1) && a2.deq(b2),
-            (LOp(s1, a), LOp(s2, b)) => s1 == s2 && a.deq(b),
+            (Vector(v1), Vector(v2)) => v1.len() == v2.len() && v1.iter().zip(v2.iter()).all(|(a, b)| a.deep_eq(b)),
+            (Op(s1, a1, a2), Op(s2, b1, b2)) => s1 == s2 && a1.deep_eq(b1) && a2.deep_eq(b2),
+            (LOp(s1, a), LOp(s2, b)) => s1 == s2 && a.deep_eq(b),
             (Float(f1), Float(f2)) => f1 == f2,
             _ => false
         }

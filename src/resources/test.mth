@@ -41,8 +41,44 @@ df/dt # unique eval rules for all variables starting with 'd'?, this could be ve
 # Integrals will be done with function I
 I(f) 
 
+indentity(x) = x
+
 
 fmt()
+
+abs(x) = x where { x >= 0 }
+abs(x) = -x where { x < 0 }
+
+eq = { x^2 = 10 } # This needs some thought
+
+satisfy(eq)
+
+# A technical definition that I intend to add to eval function, this will allow derivatives to be written as "df/dx" instead of derive(f, x)
+eval(a/b) = derive(removePrefix(d, a), removePrefix(d, b)) where { startsWithPrefix(d, a), startsWithPrefix(d, b) } 
+
+
+compound(amount, rate, times) = compound(amount * rate, rate, times - 1)
+compound(amount, rate, 0) = amount
+
+# Experimental Syntax
+derive(a:!Contains(x)*x:Any^n:!Constains(x), x) = a * n * x ^ (n - 1)
+
+# Equivalent to above
+derive(a*x^n) = a * n * x ^ (n - 1) where { !Contains(a, x), !Contains(n, x) }
+
+
+compound(50 000, 0.08, 5)
+eval    # perhaps logically equivalent to: eval(ans) 
+
+
+global eval(x) = f(x)
+
+f(a + b) = f(b + a)
+f(a * b) = f(b * a)
+f(--a) = f(a)
+f(a+ (-b)) = f(a - b)
+
+clear(f)
 
 
 

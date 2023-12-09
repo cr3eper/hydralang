@@ -68,7 +68,13 @@ pub fn parse_script(input: &str) -> Result<Script, ()> {
 
     for function in token_script.function_defs {
 
-        let parsed_function = FunctionDef::new(function.name, function.args, parse_tokens(function.tokens)?, function.constraints);
+        let mut parsed_function_args = Vec::new();
+
+        for arg in function.args {
+            parsed_function_args.push(parse_tokens(arg)?);
+        }
+
+        let parsed_function = FunctionDef::new(function.name, parsed_function_args, parse_tokens(function.tokens)?, function.constraints);
 
         script.add_function_def(parsed_function);
     }

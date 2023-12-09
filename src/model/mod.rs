@@ -20,12 +20,16 @@ pub use constraint::Constraint;
 
 
 pub mod function {
-    use super::{expression::Expression, Constraint};
+    use std::collections::HashMap;
+
+    use crate::traversal::TreeStructure;
+
+    use super::{expression::{Expression, Node}, Constraint};
 
     #[derive(Clone)]
     pub struct FunctionDef {
         name: String,
-        args: Vec<String>,
+        args: Vec<Expression>,
         expr: Expression,
         constraints: Vec<Constraint>
     }
@@ -45,7 +49,7 @@ pub mod function {
             let mut result = String::new();
 
             result.push_str(format!("{}(", self.name).as_str());
-            result.push_str(self.args.iter().map(|s| s.clone()).collect::<Vec<String>>().join(", ").as_str());
+            result.push_str(self.args.iter().map(|s| s.to_string()).collect::<Vec<String>>().join(", ").as_str());
             result.push_str(") = ");
             result.push_str(self.expr.to_string().as_str());
             result.push_str(" where { #TODO: Use Constraints #");
@@ -57,12 +61,80 @@ pub mod function {
 
     impl FunctionDef {
 
-        pub fn new(name: String, args: Vec<String>, expr: Expression, constraints: Vec<Constraint>) -> Self {
+        pub fn new(name: String, args: Vec<Expression>, expr: Expression, constraints: Vec<Constraint>) -> Self {
             FunctionDef { name, args, expr, constraints }
         }
 
         pub fn get_name(&self) -> &String {
             &self.name
+        }
+
+        fn compare_to<'a>(a: &'a Node, b: &'a Node, symbol_lookup: &mut HashMap<String, Expression>) -> bool {
+            match (a, b) {
+                (Node::Op(a_op, a_l, a_r), Node::Op(b_op, b_l, b_r)) => {
+                    if a_op == b_op {
+                        let l_eq = Self::compare_to(a_l, b_l, symbol_lookup);
+                        let r_eq= Self::compare_to(a_r, b_r, symbol_lookup);
+                        l_eq && r_eq
+                    } else {
+                        false
+                    }
+                },
+                (Node::LOp(a_op, a_b), Node::LOp(b_op, b_b)) => {
+                    if a_op == b_op {
+                        Self::compare_to(a_b, b_b, symbol_lookup)
+                    } else {
+                        false
+                    }
+                },
+                (Node::Num(a_n), Node::Num(b_n)) => a_n == b_n,
+                (Node::Float(a_n), Node::Float(b_n)) => a_n == b_n,
+                (Node::Var(a), Node::Var(b)) => {
+                    if let Some(previous) = symbol_lookup.get(a).clone() {
+                        match previous.get_root_node() {
+                            Node::Var(name) => b == name,
+                            _ => false
+                        }
+                    } else {
+                        symbol_lookup.insert(a.to_string(), Expression::new(Node::Var(b.to_string())));
+                        true
+                    }
+                    
+                },
+                (Node::Var(a), other) => {
+                    if let Some(previous) = symbol_lookup.get(a).clone() {
+                        match previous.get_root_node() {
+                            Node::Var(name) => b == name,
+                            _ => false
+                        }
+                    } else {
+                        symbol_lookup.insert(a.to_string(), Expression::new(Node::Var(b.to_string())));
+                        true
+                    }
+                }
+                (_, _) => false
+            }
+        }
+
+        pub fn try_apply<'a>(&self, input_args: &'a Vec<Expression>) -> Option<Expression> {
+
+            if input_args.len() != self.args.len() { return None; }
+            
+            for (n, input_arg ) in input_args.iter().enumerate() {
+
+                let function_tree = TreeStructure::<()>::new(self.args.get(n).unwrap());
+                let argument_tree = TreeStructure::<()>::new(input_arg);
+                let mut function_traverser = function_tree.traverse();
+                let mut argument_traverser = argument_tree.traverse();
+
+                loop {
+                    
+                }
+
+            }
+
+            None
+
         }
 
     }
@@ -82,9 +154,15 @@ pub mod function {
             self.function_defs.push(function_def);
         }
 
-        pub fn execute(&self, args: Vec<Expression>) -> Expression {
-            // Here is where we apply pattern matching and constraint matching to determine which function to execute
-            todo!()
+        pub fn try_apply<'a>(&self, args: &'a Vec<Expression>) -> Option<Expression> {
+
+            for func in self.function_defs.iter() {
+                if let Some(result) = func.try_apply(args) {
+                    return Some(result);
+                }
+            }
+
+            None
         }   
     }
 

@@ -1,6 +1,6 @@
 use std::cmp::Ordering;
 
-use crate::traits::{ShallowEq, DeepEq};
+use crate::{traits::{ShallowEq, DeepEq}, parsing::parser::parse_statement};
 
 /// A wrapper around Nodes, if you're doing something directly with Node types, consider thinking about how you could do it with this instead.
 #[derive(Debug, Clone)]
@@ -10,7 +10,7 @@ pub struct Expression {
 
 /// Nodes are building blocks of expressions, The syntax tree is designed in a way that is intended to be extensible. If what you're trying to do isn't supported for the Expression type you may have to work with Nodes.
 /// Support for new operatores and function definition types, in the future an abstraction over Number types will be added to handle large numbers
-/// Additionally a custom type Node may be added which will allow for further use defined types
+/// Additionally a custom type Node may be added which will allow for further user defined types
 #[derive(Debug, Clone)]
 pub enum Node {
     Op(String, Box<Node>, Box<Node>),
@@ -30,7 +30,7 @@ pub enum Node {
 
 impl PartialEq for Expression {
     fn eq(&self, other: &Self) -> bool {
-        self.root_node.deq(&other.root_node)
+        self.root_node.deep_eq(&other.root_node)
     }
 }
 
@@ -46,7 +46,11 @@ impl Expression {
 
     pub fn new(root: Node) -> Self {
         Expression { root_node: root }
-    } 
+    }
+
+    pub fn parse(text: String) -> Result<Self, ()>  {
+        parse_statement(&text)
+    }
 
 }
 
@@ -135,4 +139,23 @@ impl ToString for Node {
             },
         }
     }
+}
+
+
+impl Node {
+
+    pub fn is_op(&self) -> bool {
+        match self {
+            Node::Op(_, _, _) => true,
+            _ => false
+        }
+    }
+
+    pub fn is_var(&self) -> bool {
+        match self {
+            Node::Var(_) => true,
+            _ => false
+        }
+    }
+
 }
