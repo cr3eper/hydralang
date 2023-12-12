@@ -69,53 +69,6 @@ pub mod function {
             &self.name
         }
 
-        fn compare_to<'a>(a: &'a Node, b: &'a Node, symbol_lookup: &mut HashMap<String, Expression>) -> bool {
-            match (a, b) {
-                (Node::Op(a_op, a_l, a_r), Node::Op(b_op, b_l, b_r)) => {
-                    if a_op == b_op {
-                        let l_eq = Self::compare_to(a_l, b_l, symbol_lookup);
-                        let r_eq= Self::compare_to(a_r, b_r, symbol_lookup);
-                        l_eq && r_eq
-                    } else {
-                        false
-                    }
-                },
-                (Node::LOp(a_op, a_b), Node::LOp(b_op, b_b)) => {
-                    if a_op == b_op {
-                        Self::compare_to(a_b, b_b, symbol_lookup)
-                    } else {
-                        false
-                    }
-                },
-                (Node::Num(a_n), Node::Num(b_n)) => a_n == b_n,
-                (Node::Float(a_n), Node::Float(b_n)) => a_n == b_n,
-                (Node::Var(a), Node::Var(b)) => {
-                    if let Some(previous) = symbol_lookup.get(a).clone() {
-                        match previous.get_root_node() {
-                            Node::Var(name) => b == name,
-                            _ => false
-                        }
-                    } else {
-                        symbol_lookup.insert(a.to_string(), Expression::new(Node::Var(b.to_string())));
-                        true
-                    }
-                    
-                },
-                (Node::Var(a), other) => {
-                    if let Some(previous) = symbol_lookup.get(a).clone() {
-                        match previous.get_root_node() {
-                            Node::Var(name) => b == name,
-                            _ => false
-                        }
-                    } else {
-                        symbol_lookup.insert(a.to_string(), Expression::new(Node::Var(b.to_string())));
-                        true
-                    }
-                }
-                (_, _) => false
-            }
-        }
-
         pub fn try_apply<'a>(&self, input_args: &'a Vec<Expression>) -> Option<Expression> {
 
             if input_args.len() != self.args.len() { return None; }

@@ -7,6 +7,5 @@ edition = "2021"
 
 [dependencies]
 serde = "1.0.183"
-rustyline = "11.0.0"
 pest = "2.7.3"
 pest_derive = "2.7.3"
