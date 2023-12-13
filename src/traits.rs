@@ -16,7 +16,6 @@ pub trait ShallowEq {
     fn shallow_eq(&self, other: &Self) -> bool;
 }
 
-/// A complicated problem when you 
 pub trait StructuralEq {
 
     fn structural_eq(&self, other: &Self) -> bool;

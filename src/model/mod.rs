@@ -20,11 +20,10 @@ pub use constraint::Constraint;
 
 
 pub mod function {
-    use std::collections::HashMap;
 
     use crate::traversal::TreeStructure;
 
-    use super::{expression::{Expression, Node}, Constraint};
+    use super::{expression::Expression, Constraint};
 
     #[derive(Clone)]
     pub struct FunctionDef {
@@ -95,17 +94,13 @@ pub mod function {
 
     impl FunctionCollection {
 
-        pub fn get_name(&self) -> &String {
-            &self.name
-        }
+        pub fn get_name(&self) -> &String { &self.name }
 
-        pub fn new(name: String) -> Self {
-            FunctionCollection { name, function_defs: Vec::new() }
-        }
+        pub fn new(name: String) -> Self { FunctionCollection { name, function_defs: Vec::new() } }
 
-        pub fn add_function_def(&mut self, function_def: FunctionDef) {
-            self.function_defs.push(function_def);
-        }
+        pub fn add_function_def(&mut self, function_def: FunctionDef) { self.function_defs.push(function_def); }
+
+        pub fn get_function_defs(&self) -> Vec<FunctionDef> { self.function_defs.clone() }
 
         pub fn try_apply<'a>(&self, args: &'a Vec<Expression>) -> Option<Expression> {
 
@@ -143,6 +138,8 @@ pub use function::FunctionDef;
 pub mod script {
     use std::collections::HashMap;
 
+    use crate::parsing::parser::parse_script;
+
     use super::{Expression, FunctionDef, function::FunctionCollection};
 
 
@@ -177,8 +174,30 @@ pub mod script {
             }
         }
 
+        pub fn get_function_defs(&self) -> Vec<FunctionDef> {
+            let mut result = Vec::new();
+            for collection in self.function_defs.values() {
+                for func in collection.get_function_defs() {
+                    result.push(func);
+                }
+            }
+
+            result
+        }
+
         pub fn add_expression_evaluation(&mut self, expression: Expression) {
             self.expressions.push(expression);
+        }
+
+        pub fn parse(input: &str) -> Result<Self, ()> {
+            parse_script(input)
+        }
+
+        pub fn merge(&mut self, other: &Self) {
+            for f in other.get_function_defs() {
+                self.add_function_def(f); // TODO: Figure out when functions should be overridden vs adjacent, for now newly added functions can never replace old ones
+            }
+            self.expressions.append(&mut other.expressions.clone())
         }
 
     }
