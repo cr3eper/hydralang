@@ -4,13 +4,13 @@
 #![feature(iterator_try_collect)]
 #![allow(dead_code)]
 
-mod parsing;
-mod stack;
-mod visitor;
-mod model;
-mod traits;
-mod algorithms;
-mod traversal;
+pub mod parsing;
+pub mod stack;
+pub mod visitor;
+pub mod model;
+pub mod traits;
+pub mod algorithms;
+pub mod traversal;
 
 
 
