@@ -76,7 +76,7 @@ pub fn tokenize_script(input: &str) -> TokenizedScript {
                 let name = head.next().unwrap().as_str().to_string();
                 let mut args = Vec::new();
                 for arg in head {
-                    let tokens: Vec<Token> = shunting_yard(internal_tokenize(arg.into_inner().next().expect("function argument without expression should be impossible").into_inner()));
+                    let tokens: Vec<Token> = shunting_yard(internal_tokenize(arg.into_inner()));
                     args.push(tokens);
                 }
                 let statement = func_def_iter.next().unwrap();
