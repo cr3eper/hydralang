@@ -1,7 +1,13 @@
 use std::collections::HashMap;
 
-use crate::{model::expression::Node, visitor::ImmutableExpressionVisitor};
+use crate::{model::{expression::Node, Expression}, visitor::ImmutableExpressionVisitor};
 
+
+pub trait Callable: ToString {
+
+    fn call(&self, symbol_table: HashMap<String, Expression>) -> Expression;
+
+}
 
 /// Compares expression equivalence not mathmatical equivalence ie: 4 / 2 = 2 would be false in this context
 /// This function trait can be a more expensive comparison since it often involves traversing the entire tree to determine if two trees are logically equivalent
@@ -55,43 +61,6 @@ impl ShallowEq for Node {
     
 }
 
-struct StructuralEqVisitor {
-    main: Node,
-    other: Node,
-    variable_mapping: HashMap<String, Option<String>>
-}
-
-impl ImmutableExpressionVisitor<bool> for StructuralEqVisitor {
-    
-        fn visit_op(&self, op_type: &String, l: &Node, r: &Node) -> bool {
-            todo!()
-        }
-    
-        fn visit_lop(&self, op_type: &String, child: &Node) -> bool {
-            todo!()
-        }
-    
-        fn visit_num(&self, n: &i64) -> bool {
-            todo!()
-        }
-    
-        fn visit_float(&self, n: &f64) -> bool {
-            todo!()
-        }
-    
-        fn visit_var(&self, name: &String) -> bool {
-            todo!()
-        }
-    
-        fn visit_vec(&self, v: &Vec<Node>) -> bool {
-            todo!()
-        }
-    
-        fn visit_function_call(&self, name: &String, args: &Vec<Node>) -> bool {
-            todo!()
-        }
-    
-}
 
 impl StructuralEq for Node {
     

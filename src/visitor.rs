@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::{model::{Expression, expression::Node}, traits::DeepEq};
 
 // TODO: Currently expressions are immutable and need to be completely rebuilt to be modified. This makes sense for now and helps avoid many bugs, but optimisations are possible that have not been implemneted
@@ -113,6 +115,29 @@ impl CommutativeExpressionMatcher {
 
     pub fn matches(&self, e: &Expression) -> bool {
         self.target.get_root_node().deep_eq(e.get_root_node())
+    }
+
+}
+
+pub struct VariableReplacer {
+    symbol_table: HashMap<String, Expression>
+}
+
+impl VariableReplacer {
+
+    pub fn new(symbol_table: HashMap<String, Expression>) -> Self {
+        Self { symbol_table }
+    }
+}
+
+impl ExpressionModfierVisitor for VariableReplacer {
+
+    fn visit_var(&mut self, name: String) -> Node {
+        if let Some(replacement) = self.symbol_table.get(&name) {
+            replacement.get_root_node().clone()
+        }else{
+            Node::Var(name)
+        }
     }
 
 }

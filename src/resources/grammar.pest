@@ -17,7 +17,7 @@ comparison      =  { "=" | "!=" | "<=" | ">=" | "<" | ">" }
 range           =  { (number ~ comparison){0, 1} ~ var ~ (comparison ~ number){0, 1} }
 type            =  { "Num" | "Var" | "Function" | "Any" | "Constant" }
 
-function_name = @{ ASCII_ALPHA+ }
+function_name = @{ "_"{0, 1} ~ ASCII_ALPHA+ }
 function_def  =  { function_head ~ statement ~ constraint{0, 1} ~ NEWLINE* }
 function_head = ${ function_name ~ "(" ~ " "* ~ expr ~ (" "* ~ "," ~ " "* ~ expr ~ " "*)* ~ ")" ~ " "* ~ "=" }
 

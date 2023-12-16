@@ -1,5 +1,3 @@
-use std::collections::btree_map::IterMut;
-
 use crate::{model::{expression::Node, Expression}, stack::Stack};
 
 
@@ -116,9 +114,8 @@ impl<'a, State: Default + Clone> TreeRunner<'a, State> {
 
 #[cfg(test)]
 mod tests{
-    use crate::{parsing::parser::parse_statement, traversal, traits::DeepEq};
-
-    use super::{ TreeStructure, TreeRunner};
+    use crate::{parsing::parser::parse_statement, traits::DeepEq};
+    use super::TreeStructure;
 
 
     #[test]

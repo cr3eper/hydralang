@@ -2,7 +2,7 @@
 
 // Parser is actually quite simple after tokenizer and shunting yard algorithm are applied, simply exists to map tokens to enums
 
-use crate::{model::{ Expression, Script, FunctionDef, expression::Node }, parsing::tokenizer::{tokenize_statement, tokenize_script}, stack::Stack};
+use crate::{model::{ Expression, Script, expression::Node, function::FunctionDef }, parsing::tokenizer::{tokenize_statement, tokenize_script}, stack::Stack};
 use super::tokenizer::{OperandType, TokenStream};
 
 fn parse_tokens(tokens: TokenStream) -> Result<Expression, ()> {
