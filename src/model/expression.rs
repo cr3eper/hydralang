@@ -52,6 +52,10 @@ impl Expression {
         parse_statement(&text)
     }
 
+    pub fn compare_to<'a>(&'a self, b: &'a Expression, symbol_lookup: &mut HashMap<String, Expression>) -> bool {
+        self.get_root_node().compare_to(b.get_root_node(), symbol_lookup)
+    }
+
 }
 
 impl ToString for Expression {

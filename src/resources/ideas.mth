@@ -249,3 +249,8 @@ x^2 + y^2 = 4
 
 df/dx = -f(x)/x
 
+F(f32, f32) -> f32
+f(x, y) = x^2 + 2*x
+
+f(x, y) = x^2 + 2*x where { isF32(x), isF32(y), returnsF32(f) }
+

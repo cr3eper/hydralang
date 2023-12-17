@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{model::{Expression, expression::Node}, traits::DeepEq};
+use crate::{model::{Expression, expression::Node, Script}, traits::DeepEq};
 
 // TODO: Currently expressions are immutable and need to be completely rebuilt to be modified. This makes sense for now and helps avoid many bugs, but optimisations are possible that have not been implemneted
 // This is a basic left side, depth first traversal with no modifications made
@@ -53,11 +53,13 @@ pub trait ExpressionModfierVisitor {
 
 }
 
-pub struct DefaultSimplifyVisitor {}
+pub struct DefaultSimplifyVisitor {
+    script: Script
+}
 
 impl DefaultSimplifyVisitor {
-    fn new() -> Self {
-        DefaultSimplifyVisitor{}
+    pub fn new(script: Script) -> Self {
+        DefaultSimplifyVisitor{ script }
     }
 }
 
@@ -69,6 +71,15 @@ impl ExpressionModfierVisitor for DefaultSimplifyVisitor {
             return self.visit_node(v[0].clone());
         } else {
             Node::Vector(v.into_iter().map(|n| self.visit_node(n)).collect())
+        }
+    }
+
+    // We always want to "simplify" function calls by applying them, or else what's the point in having them
+    fn visit_function_call(&mut self, name: String, args: Vec<Node>) -> Node {
+        if let Some(result) = self.script.exec_function(name.as_str(), args.iter().map(|n| Expression::new(n.clone())).collect()) {
+            result.get_root_node().clone()
+        }else {
+            Node::FunctionCall { name, args }
         }
     }
 
@@ -153,7 +164,7 @@ mod tests {
     fn test_remove_unneeded_vec() {
 
         let test = "x^2 + (2 * x + ((10 - 4))) * 10";
-        let mut visitor = DefaultSimplifyVisitor::new();
+        let mut visitor = DefaultSimplifyVisitor::new(Script::new(Vec::new(), Vec::new()));
 
         let expect = Expression::new( 
          add(

@@ -27,12 +27,12 @@ pub use script::Script;
 pub mod script {
     use std::collections::HashMap;
 
-    use crate::parsing::parser::parse_script;
+    use crate::{parsing::parser::parse_script, visitor::{DefaultSimplifyVisitor, ExpressionModfierVisitor}};
 
     use super::{function::{FunctionCollection, FunctionDef}, Expression};
 
 
-
+    #[derive(Clone)]
     pub struct Script {
         function_defs: HashMap<String, FunctionCollection>,
         expressions: Vec<Expression>
@@ -83,11 +83,23 @@ pub mod script {
             parse_script(input)
         }
 
+        pub fn exec_function(&self, name: &str, args: Vec<Expression>) -> Option<Expression> {
+            self.function_defs.get(&name.to_string())?.try_apply(&args)
+        }
+
         pub fn merge(&mut self, other: &Self) {
             for f in other.get_function_defs() {
                 self.add_function_def(f); // TODO: Figure out when functions should be overridden vs adjacent, for now newly added functions can never replace old ones
             }
             self.expressions.append(&mut other.expressions.clone())
+        }
+
+        pub fn run(&mut self) {
+            for line in 0..self.expressions.len() {
+                let mut simplify = DefaultSimplifyVisitor::new(self.clone()); //TODO: Fix dumb clone
+                let new_expr = simplify.visit(self.expressions.get(line).unwrap().clone());
+                self.expressions[line] = new_expr;
+            }
         }
 
     }

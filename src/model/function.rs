@@ -40,7 +40,7 @@ impl Callable for RustInternalFunction {
 }
 
 impl ToString for RustInternalFunction {
-    fn to_string(&self) -> String { String::from("0 # Rust Embedded Function #") }
+    fn to_string(&self) -> String { String::from("0 #(Rust Embedded Function)#") }
 }
 
 
@@ -71,8 +71,11 @@ impl ToString for FunctionDef {
         result.push_str(self.args.iter().map(|s| s.to_string()).collect::<Vec<String>>().join(", ").as_str());
         result.push_str(") = ");
         result.push_str(self.expr.call(HashMap::new()).to_string().as_str());
-        result.push_str(" where { #TODO: Use Constraints #");
-        result.push_str("}");
+
+        if self.constraints.len() != 0 {
+            result.push_str(" where { #TODO: Use Constraints #");
+            result.push_str(" }");
+        }
 
         result
     }
@@ -92,15 +95,15 @@ impl FunctionDef {
 
         if input_args.len() != self.args.len() { return None; }
         
+        let mut symbol_table = HashMap::new();
         for (n, input_arg ) in input_args.iter().enumerate() {
-
-            loop {
-                
+            let is_match = self.args.get(n).unwrap().compare_to(input_arg, &mut symbol_table);
+            if !is_match {
+                return None;
             }
-
         }
 
-        None
+        Some(self.expr.call(symbol_table))
 
     }
 

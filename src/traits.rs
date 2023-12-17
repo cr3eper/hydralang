@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{model::{expression::Node, Expression}, visitor::ImmutableExpressionVisitor};
+use crate::model::{expression::Node, Expression};
 
 
 pub trait Callable: ToString {
