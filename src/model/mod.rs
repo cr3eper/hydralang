@@ -75,6 +75,10 @@ pub mod script {
             result
         }
 
+        pub fn get_expression(&self, index: usize) -> Option<&Expression> {
+            self.expressions.get(index)
+        }
+
         pub fn add_expression_evaluation(&mut self, expression: Expression) {
             self.expressions.push(expression);
         }

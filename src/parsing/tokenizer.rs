@@ -265,7 +265,6 @@ mod tests {
             }
             
         }
-        println!("");
 
         let expected = vec![
             Token::Operand(OperandType::Number("5".to_string())),

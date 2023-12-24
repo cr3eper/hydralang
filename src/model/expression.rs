@@ -166,7 +166,7 @@ impl Node {
         match (self, b) {
             (Node::Op(a_op, a_l, a_r), Node::Op(b_op, b_l, b_r)) => {
                 if a_op.as_str() == b_op {
-                    let l_eq = a_l.compare_to(b, symbol_lookup);
+                    let l_eq = a_l.compare_to(b_l, symbol_lookup);
                     let r_eq= a_r.compare_to(b_r, symbol_lookup);
                     l_eq && r_eq
                 } else {
@@ -204,7 +204,7 @@ impl Node {
                         _ => false
                     }
                 } else {
-                    symbol_lookup.insert(a.to_string(), Expression::new(Node::Var(b.to_string())));
+                    symbol_lookup.insert(a.to_string(), Expression::new(b.clone()));
                     true
                 }
             }

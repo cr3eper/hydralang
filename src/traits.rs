@@ -61,6 +61,12 @@ impl ShallowEq for Node {
     
 }
 
+impl DeepEq for Expression {
+    fn deep_eq(&self, other: &Self) -> bool {
+        self.get_root_node().deep_eq(other.get_root_node())
+    }
+}
+
 
 impl StructuralEq for Node {
     

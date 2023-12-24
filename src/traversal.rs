@@ -128,9 +128,6 @@ mod tests{
         let left_left = traversal.left().unwrap().left().unwrap();
 
         assert!(left_left.get_node().deep_eq(&component.get_root_node()));
-
-        let node3 = left_left.get_node();
-        println!("left left {}", node3.to_string());
         
 
     }

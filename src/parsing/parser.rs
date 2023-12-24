@@ -115,22 +115,11 @@ mod tests{
         df(sin(x), x) = cos(x) where { x is Var }
         fact(n) = n * fact(n - 1) where { n > 0 }
         fact(0) = 1";
+
+        let _ = parse_script(test).unwrap();
     }
 
-    #[test]
-    fn test_simplify_rules() {
-        let expr1 = "(x^2 + x^2) * x";
 
-        let rules = "
-            simplify(x^n + x^n) = 2*x^n
-            simplify((a) * n) = n * a
-
-            simplify(a * b) = simplify(b * a) # has potential to recurse infinitely, Should be able to avoid this by retaining previous evaluation tree
-            simplify(a + b) = simplify(b + a) # ditto above
-        ";
-
-        let expected1 = "2*x^3";
-    }
 }
 
 

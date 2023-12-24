@@ -6,9 +6,7 @@ use crate::{model::{Expression, expression::Node, Script}, traits::DeepEq};
 // This is a basic left side, depth first traversal with no modifications made
 pub trait ExpressionModfierVisitor {
 
-    fn visit(&mut self, e: Expression) -> Expression {
-        Expression::new(self.visit_node(e.get_root_node().clone() ))
-    }
+    fn visit(&mut self, e: Expression) -> Expression { Expression::new(self.visit_node(e.get_root_node().clone() )) }
 
     fn visit_node(&mut self, n: Node) -> Node {
         match n {
@@ -22,33 +20,19 @@ pub trait ExpressionModfierVisitor {
         }
     }
 
-    fn visit_op(&mut self, op_type: String, l: Node, r: Node) -> Node {
-        Node::Op(op_type, Box::new(self.visit_node(l)), Box::new(self.visit_node(r)))
-    }
+    fn visit_op(&mut self, op_type: String, l: Node, r: Node) -> Node { Node::Op(op_type, Box::new(self.visit_node(l)), Box::new(self.visit_node(r))) }
 
-    fn visit_lop(&mut self, op_type: String, child: Node) -> Node {
-        Node::LOp(op_type, Box::new(self.visit_node(child)))
-    }
+    fn visit_lop(&mut self, op_type: String, child: Node) -> Node { Node::LOp(op_type, Box::new(self.visit_node(child))) }
 
-    fn visit_num(&mut self, n: i64) -> Node {
-        Node::Num(n)
-    }
+    fn visit_num(&mut self, n: i64) -> Node { Node::Num(n) }
 
-    fn visit_float(&mut self, n: f64) -> Node {
-        Node::Float(n)
-    }
+    fn visit_float(&mut self, n: f64) -> Node { Node::Float(n) }
 
-    fn visit_var(&mut self, name: String) -> Node {
-        Node::Var(name)
-    }
+    fn visit_var(&mut self, name: String) -> Node { Node::Var(name) }
 
-    fn visit_vec(&mut self, v: Vec<Node>) -> Node {
-        Node::Vector(v.into_iter().map(|n| self.visit_node(n)).collect())
-    }
+    fn visit_vec(&mut self, v: Vec<Node>) -> Node { Node::Vector(v.into_iter().map(|n| self.visit_node(n)).collect()) }
 
-    fn visit_function_call(&mut self, name: String, args: Vec<Node>) -> Node {
-        Node::FunctionCall { name, args: args.into_iter().map(|n| self.visit_node(n)).collect() }
-    }
+    fn visit_function_call(&mut self, name: String, args: Vec<Node>) -> Node { Node::FunctionCall { name, args: args.into_iter().map(|n| self.visit_node(n)).collect() } }
 
 
 }
@@ -185,6 +169,21 @@ mod tests {
 
 
 
+    }
+
+    #[test]
+    fn test_variable_substitution() {
+        let test_script = "f(x) = x^2
+        f(10 + 2)";
+        let mut script = Script::parse(test_script).unwrap();
+        println!("function args: {:?}", script.get_function_defs().get(0).unwrap().get_args());
+        let expr = script.get_expression(0).unwrap().clone();
+        println!("orginal expression {:?}", expr.clone());
+        let mut visitor = DefaultSimplifyVisitor::new(script);
+        let result = visitor.visit(expr);
+        println!("{:?}", result);
+        //assert!(result.deep_eq(&Expression::parse("(10+2)^2".to_string()).unwrap()));
+        
     }
 
 }

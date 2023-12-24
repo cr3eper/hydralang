@@ -87,8 +87,21 @@ impl FunctionDef {
         FunctionDef { name, args, expr: Rc::new(ExpressionTemplate::new(expr)) as Rc<dyn Callable> ,  constraints, is_system_function: false }
     }
 
+    pub fn new_system_function(
+        name: String, 
+        args: Vec<Expression>, 
+        f: fn(symbol_table: HashMap<String, Expression>) -> Expression, 
+        constraints: Vec<Constraint>) -> Self
+    {
+        FunctionDef { name, args, expr: Rc::new(RustInternalFunction::new(f)), constraints, is_system_function: true }
+    }
+
     pub fn get_name(&self) -> &String {
         &self.name
+    }
+
+    pub fn get_args(&self) -> Vec<Expression> {
+        self.args.clone()
     }
 
     pub fn try_apply<'a>(&self, input_args: &'a Vec<Expression>) -> Option<Expression> {
@@ -137,8 +150,10 @@ impl ToString for FunctionCollection {
         let mut result = String::new();
 
         for func in &self.function_defs {
-            result.push_str(func.to_string().as_str());
-            result.push_str("\n");
+            if !func.is_system_function {
+                result.push_str(func.to_string().as_str());
+                result.push_str("\n");
+            }
         }
 
         result

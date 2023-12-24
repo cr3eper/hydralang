@@ -19,9 +19,9 @@ type            =  { "Num" | "Var" | "Function" | "Any" | "Constant" }
 
 function_name = @{ "_"{0, 1} ~ ASCII_ALPHA+ }
 function_def  =  { function_head ~ statement ~ constraint{0, 1} ~ NEWLINE* }
-function_head = ${ function_name ~ "(" ~ " "* ~ expr ~ (" "* ~ "," ~ " "* ~ expr ~ " "*)* ~ ")" ~ " "* ~ "=" }
+function_head =  { function_name ~ "(" ~ " "* ~ expr ~ (" "* ~ "," ~ " "* ~ expr ~ " "*)* ~ ")" ~ " "* ~ "=" }
 
 expr      = { token+ }
 statement = { expr ~ NEWLINE* }
 equality  = { expr ~ comparison ~ expr ~ NEWLINE* }
-script    = { (function_def | equality | statement)+ }
+script    = { (function_def | statement)+ }
