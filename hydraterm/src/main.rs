@@ -4,6 +4,7 @@ use crossterm::event::{Event, KeyModifiers, KeyEvent, KeyCode};
 use crossterm::style::Print;
 use crossterm::{ cursor, execute, event::read};
 use crossterm::terminal::{Clear, ClearType, size, enable_raw_mode, disable_raw_mode};
+use hydralang::builtin::base::base_config;
 use hydralang::model::{script, Script};
 
 fn mainloop() -> io::Result<()> {
@@ -12,7 +13,7 @@ fn mainloop() -> io::Result<()> {
 
     let mut input_buffer = String::new();
 
-    let mut script = Script::new(Vec::new(), Vec::new());
+    let mut script = base_config();
 
 
     loop {

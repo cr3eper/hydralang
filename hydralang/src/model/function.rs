@@ -2,7 +2,7 @@ use std::{collections::HashMap, rc::Rc};
 
 use crate::{traits::Callable, visitor::{VariableReplacer, ExpressionModfierVisitor}};
 
-use super::{Expression, Constraint};
+use super::{Expression, Constraint, expression::Node};
 
 
 
@@ -91,9 +91,19 @@ impl FunctionDef {
         name: String, 
         args: Vec<Expression>, 
         f: fn(symbol_table: HashMap<String, Expression>) -> Expression, 
-        constraints: Vec<Constraint>) -> Self
-    {
+        constraints: Vec<Constraint>
+    ) -> Self {
         FunctionDef { name, args, expr: Rc::new(RustInternalFunction::new(f)), constraints, is_system_function: true }
+    }
+
+    pub fn new_system_function_without_destructure(
+        name: String, 
+        args: Vec<String>, 
+        f: fn(symbol_table: HashMap<String, Expression>) -> Expression, 
+        constraints: Vec<Constraint>
+    ) -> Self {
+        let new_args = args.iter().map(|a| Expression::new(Node::Var(a.to_string()))).collect();
+        Self::new_system_function(name, new_args, f, constraints)
     }
 
     pub fn get_name(&self) -> &String {

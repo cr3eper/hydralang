@@ -11,6 +11,7 @@ pub mod model;
 pub mod traits;
 pub mod algorithms;
 pub mod traversal;
+pub mod builtin;
 
 
 
