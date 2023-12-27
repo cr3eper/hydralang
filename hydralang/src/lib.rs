@@ -1,7 +1,5 @@
 
 #![feature(box_patterns)]
-#![feature(iter_intersperse)]
-#![feature(iterator_try_collect)]
 #![allow(dead_code)]
 
 pub mod parsing;

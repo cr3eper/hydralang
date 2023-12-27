@@ -138,8 +138,21 @@ impl ToString for Node {
             Num(a) => format!("{}", a),
             Float(a) => format!("{}", a),
             Var(a) => format!("{}", a),
-            Vector(v) => format!("({})", v.iter().map(|v|
-                 v.to_string()).intersperse(", ".to_string()).collect::<String>()),
+            Vector(v) => {
+                if v.len() == 0 {
+                    return "()".to_string();
+                }
+                let mut interspersed = Vec::new();
+                let mut iter = v.iter();
+                interspersed.push(iter.next().unwrap().to_string());
+
+                while let Some(e) = iter.next() {
+                    interspersed.push(", ".to_string());
+                    interspersed.push(e.to_string());
+                }
+
+                format!("({})", interspersed.iter().map(|s| s.clone()).collect::<String>())
+            },
             FunctionCall { name, args } => {
                 format!("{}({})", name, args.iter().map(|node| node.to_string()).collect::<Vec<String>>().join(", "))
             },
