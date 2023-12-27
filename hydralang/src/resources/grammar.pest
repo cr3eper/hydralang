@@ -10,12 +10,7 @@ function_call =  { function_name ~ "(" ~ expr ~ ("," ~ expr)* ~ ")" }
 
 token = _{ number | operator | function_call | var | vector }
 
-constraint      =  { "where" ~ "{" ~ (constraint_item ~ ("," ~ constraint_item)*)~ "}" }
-constraint_item = _{ conditional | equality }
-conditional     = ${ var ~ " "+ ~ ("is" | "not") ~ " "+ ~ function_call }
-comparison      =  { "=" | "!=" | "<=" | ">=" | "<" | ">" }
-range           =  { (number ~ comparison){0, 1} ~ var ~ (comparison ~ number){0, 1} }
-type            =  { "Num" | "Var" | "Function" | "Any" | "Constant" }
+constraint      =  { "where" ~ "{" ~ (expr ~ ("," ~ expr)*)~ "}" }
 
 function_name = @{ "_"{0, 1} ~ ASCII_ALPHA+ }
 function_def  =  { function_head ~ statement ~ constraint{0, 1} ~ NEWLINE* }
@@ -23,5 +18,4 @@ function_head =  { function_name ~ "(" ~ " "* ~ expr ~ (" "* ~ "," ~ " "* ~ expr
 
 expr      = { token+ }
 statement = { expr ~ NEWLINE* }
-equality  = { expr ~ comparison ~ expr ~ NEWLINE* }
 script    = { (function_def | statement)+ }

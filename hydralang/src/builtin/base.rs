@@ -39,20 +39,54 @@ impl RustInternalFunctionBuilder {
     }
 }
 
+pub mod base_internal{
+    use crate::model::{expression::Node, Expression};
 
-pub fn add_nums(args: &[Node]) -> Expression {
-    match args {
-        [Node::Num(a_value), Node::Num(b_value)] => Expression::new(Node::Num(a_value + b_value)),
-        _ => panic!("Unexpected symbols in _addNums function")
+    pub fn add_nums(args: &[Node]) -> Expression {
+        match args {
+            [Node::Num(a_value), Node::Num(b_value)] => Expression::new(Node::Num(a_value + b_value)),
+            _ => panic!("Unexpected symbols in _addNumbers function")
+        }
     }
+
+    pub fn sub_nums(args: &[Node]) -> Expression {
+        match args {
+            [Node::Num(a_value), Node::Num(b_value)] => Expression::new(Node::Num(a_value - b_value)),
+            _ => panic!("Unexpected symbols in _subtractNumbers function")
+        }
+    }
+
+    pub fn multiply_nums(args: &[Node]) -> Expression {
+        match args {
+            [Node::Num(a_value), Node::Num(b_value)] => Expression::new(Node::Num(a_value * b_value)),
+            _ => panic!("Unexpected symbols in _multiplyNumbers function")
+        }
+    }
+
+    pub fn exponentiate_nums(args: &[Node]) -> Expression {
+        match args {
+            [Node::Num(a_value), Node::Num(b_value)] => Expression::new(Node::Num(a_value.pow(*b_value as u32))),
+            _ => panic!("Unexpected symbols in _exponentiateNumbers function")
+        }
+    }
+
+    pub fn is_num(args: &[Node]) -> Expression {
+        match args {
+            [Node::Num(_)] => Expression::new(Node::Num(1)),
+            _ => Expression::new(Node::Num(0))
+        }
+    }
+
 }
 
 pub fn base_config() -> Script {
-    let mut function_defs = Vec::new();
-
-    let add_nums_instance = RustInternalFunctionBuilder::new().name("_addNums").args(&["a", "b"]).function(add_nums).build();
-    function_defs.push(add_nums_instance);
-
+    let function_defs = vec![
+        RustInternalFunctionBuilder::new().name("_addNumbers").args(&["a", "b"]).function(base_internal::add_nums).build(),
+        RustInternalFunctionBuilder::new().name("_subtractNumbers").args(&["a", "b"]).function(base_internal::sub_nums).build(),
+        RustInternalFunctionBuilder::new().name("_multiplyNumbers").args(&["a", "b"]).function(base_internal::multiply_nums).build(),
+        RustInternalFunctionBuilder::new().name("_exponentiateNumbers").args(&["a", "b"]).function(base_internal::exponentiate_nums).build(),
+        RustInternalFunctionBuilder::new().name("isNum").args(&["arg"]).function(base_internal::is_num).build()
+    ];
 
 
     Script::new( function_defs, Vec::new())
