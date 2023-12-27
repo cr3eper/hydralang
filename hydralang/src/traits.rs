@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
-use crate::model::{expression::Node, Expression};
+use crate::model::{expression::Node, Expression, symbol_table::SymbolTable};
 
 
 pub trait Callable: ToString {
 
-    fn call(&self, symbol_table: HashMap<String, Expression>) -> Expression;
+    fn call(&self, symbol_table: SymbolTable) -> Expression;
 
 }
 

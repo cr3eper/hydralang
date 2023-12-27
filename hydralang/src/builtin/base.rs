@@ -1,32 +1,59 @@
+use std::collections::HashMap;
+
 use crate::model::expression::Node;
+use crate::model::function::RustInternalFunction;
 use crate::model::{Script, function::FunctionDef};
 use crate::model::Expression;
 
-pub fn narg_function<const N: usize>(name: &str, f: fn(Vec<Expression>) -> Expression) -> FunctionDef {
+pub struct RustInternalFunctionBuilder {
+    args: Vec<String>,
+    name: Option<String>,
+    function: Option<fn(&[Node]) -> Expression>
+}
 
-    let arg_converted = (0..N).into_iter().map(|i| format!("arg{}", i)).collect();
+impl RustInternalFunctionBuilder {
+    pub fn new() -> Self { Self { args: Vec::new(), name: None, function: None } }
 
-    FunctionDef::new_system_function_without_destructure(name.to_string(), arg_converted, |s| {
-        let mut arg_converted = (0..N).into_iter().map(|i| format!("arg{}", i));
-        let mut args = Vec::new();
-        for arg in arg_converted {
-            args.push(s[&arg]);
-        }
-        f(args)
-    } , Vec::new())
+    pub fn name(&mut self, name: &str) -> &mut Self {
+        self.name = Some(name.to_string());
+        self
+    }
+
+    pub fn function(&mut self, f: fn(&[Node]) -> Expression) -> &mut Self {
+        self.function = Some(f);
+        self
+    }
+
+    pub fn args(&mut self, args: &[&str]) -> &mut Self {
+        self.args.append(&mut args.into_iter().map(|s| s.to_string()).collect());
+        self
+    }
+
+    pub fn build(&self) -> FunctionDef {
+        FunctionDef::new_system_function_def(
+            self.name.clone().unwrap(),
+            self.args.iter().map(|a| Expression::new(Node::Var(a.clone()))).collect(),
+            RustInternalFunction::new(self.args.clone().into_boxed_slice(), self.function.unwrap()),
+            Vec::new()
+        )
+    }
+}
+
+
+pub fn add_nums(args: &[Node]) -> Expression {
+    match args {
+        [Node::Num(a_value), Node::Num(b_value)] => Expression::new(Node::Num(a_value + b_value)),
+        _ => panic!("Unexpected symbols in _addNums function")
+    }
 }
 
 pub fn base_config() -> Script {
     let mut function_defs = Vec::new();
-    function_defs.push(FunctionDef::new_system_function_without_destructure(
-        "_addNums".to_string(), 
-        vec!["a".to_string(), "b".to_string()],
-        |symbols| match (symbols[&"a".to_string()].get_root_node(), symbols[&"b".to_string()].get_root_node()) {
-            (Node::Num(a), Node::Num(b)) => Expression::new(Node::Num(a + b)),
-            _ => panic!("Unexpected symbols in _addNums function")
-        }, 
-        Vec::new()
-    ));
+
+    let add_nums_instance = RustInternalFunctionBuilder::new().name("_addNums").args(&["a", "b"]).function(add_nums).build();
+    function_defs.push(add_nums_instance);
+
+
 
     Script::new( function_defs, Vec::new())
 }

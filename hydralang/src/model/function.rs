@@ -2,7 +2,7 @@ use std::{collections::HashMap, rc::Rc};
 
 use crate::{traits::Callable, visitor::{VariableReplacer, ExpressionModfierVisitor}};
 
-use super::{Expression, Constraint, expression::Node};
+use super::{Expression, Constraint, expression::Node, symbol_table::SymbolTable};
 
 
 
@@ -21,22 +21,25 @@ impl ToString for ExpressionTemplate {
 
 impl Callable for ExpressionTemplate {
 
-    fn call(&self, symbol_table: HashMap<String, Expression>) -> Expression {
+    fn call(&self, symbol_table: SymbolTable) -> Expression {
         VariableReplacer::new(symbol_table).visit(self.expr.clone())
     }
 }
 
 
-struct RustInternalFunction {
-    internal_function: fn(symbol_table: HashMap<String, Expression>) -> Expression
+pub struct RustInternalFunction {
+    args: Box<[String]>,
+    internal_function: fn(&[Node]) -> Expression
 }
 
 impl RustInternalFunction {
-    fn new(f: fn(symbol_table: HashMap<String, Expression>) -> Expression) -> Self { Self { internal_function: f } }
+    pub fn new(args: Box<[String]>, f: fn(&[Node]) -> Expression) -> Self { Self { args, internal_function: f } }
 }
 
 impl Callable for RustInternalFunction {
-    fn call(&self, symbol_table: HashMap<String, Expression>) -> Expression { (self.internal_function)(symbol_table) }
+    fn call(&self, symbol_table: SymbolTable) -> Expression { 
+        (self.internal_function)(symbol_table.get_args_nodes(self.args.as_ref()).unwrap().as_ref()) 
+    }
 }
 
 impl ToString for RustInternalFunction {
@@ -70,7 +73,7 @@ impl ToString for FunctionDef {
         result.push_str(format!("{}(", self.name).as_str());
         result.push_str(self.args.iter().map(|s| s.to_string()).collect::<Vec<String>>().join(", ").as_str());
         result.push_str(") = ");
-        result.push_str(self.expr.call(HashMap::new()).to_string().as_str());
+        result.push_str(self.expr.to_string().as_str());
 
         if self.constraints.len() != 0 {
             result.push_str(" where { #TODO: Use Constraints #");
@@ -87,23 +90,8 @@ impl FunctionDef {
         FunctionDef { name, args, expr: Rc::new(ExpressionTemplate::new(expr)) as Rc<dyn Callable> ,  constraints, is_system_function: false }
     }
 
-    pub fn new_system_function(
-        name: String, 
-        args: Vec<Expression>, 
-        f: fn(symbol_table: HashMap<String, Expression>) -> Expression, 
-        constraints: Vec<Constraint>
-    ) -> Self {
-        FunctionDef { name, args, expr: Rc::new(RustInternalFunction::new(f)), constraints, is_system_function: true }
-    }
-
-    pub fn new_system_function_without_destructure(
-        name: String, 
-        args: Vec<String>, 
-        f: fn(symbol_table: HashMap<String, Expression>) -> Expression, 
-        constraints: Vec<Constraint>
-    ) -> Self {
-        let new_args = args.iter().map(|a| Expression::new(Node::Var(a.to_string()))).collect();
-        Self::new_system_function(name, new_args, f, constraints)
+    pub fn new_system_function_def(name: String, args: Vec<Expression>, internal_function: RustInternalFunction, constraints: Vec<Constraint>) -> Self {
+        FunctionDef { name, args, expr: Rc::new(internal_function) as Rc<dyn Callable> ,  constraints, is_system_function: true }
     }
 
     pub fn get_name(&self) -> &String {
@@ -118,7 +106,7 @@ impl FunctionDef {
 
         if input_args.len() != self.args.len() { return None; }
         
-        let mut symbol_table = HashMap::new();
+        let mut symbol_table = SymbolTable::new();
         for (n, input_arg ) in input_args.iter().enumerate() {
             let is_match = self.args.get(n).unwrap().compare_to(input_arg, &mut symbol_table);
             if !is_match {

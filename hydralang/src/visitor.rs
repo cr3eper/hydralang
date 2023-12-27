@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::{model::{Expression, expression::Node, Script}, traits::DeepEq};
+use crate::{model::{Expression, expression::Node, Script, symbol_table::SymbolTable}, traits::DeepEq};
 
 // TODO: Currently expressions are immutable and need to be completely rebuilt to be modified. This makes sense for now and helps avoid many bugs, but optimisations are possible that have not been implemneted
 // This is a basic left side, depth first traversal with no modifications made
@@ -115,12 +115,12 @@ impl CommutativeExpressionMatcher {
 }
 
 pub struct VariableReplacer {
-    symbol_table: HashMap<String, Expression>
+    symbol_table: SymbolTable
 }
 
 impl VariableReplacer {
 
-    pub fn new(symbol_table: HashMap<String, Expression>) -> Self {
+    pub fn new(symbol_table: SymbolTable) -> Self {
         Self { symbol_table }
     }
 }

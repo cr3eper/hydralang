@@ -1,6 +1,7 @@
 pub mod expression;
 pub mod expression_builder;
 pub mod function;
+pub mod symbol_table;
 
 pub use expression::Expression;
 

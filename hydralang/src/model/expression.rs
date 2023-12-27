@@ -2,6 +2,8 @@ use std::{cmp::Ordering, collections::HashMap};
 
 use crate::{traits::{ShallowEq, DeepEq}, parsing::parser::parse_statement};
 
+use super::symbol_table::SymbolTable;
+
 /// A wrapper around Nodes, if you're doing something directly with Node types, consider thinking about how you could do it with this instead.
 #[derive(Debug, Clone)]
 pub struct Expression {
@@ -52,7 +54,7 @@ impl Expression {
         parse_statement(&text)
     }
 
-    pub fn compare_to<'a>(&'a self, b: &'a Expression, symbol_lookup: &mut HashMap<String, Expression>) -> bool {
+    pub fn compare_to<'a>(&'a self, b: &'a Expression, symbol_lookup: &mut SymbolTable) -> bool {
         self.get_root_node().compare_to(b.get_root_node(), symbol_lookup)
     }
 
@@ -162,7 +164,7 @@ impl Node {
         }
     }
 
-    fn compare_to<'a>(&'a self, b: &'a Node, symbol_lookup: &mut HashMap<String, Expression>) -> bool {
+    fn compare_to<'a>(&'a self, b: &'a Node, symbol_lookup: &mut SymbolTable) -> bool {
         match (self, b) {
             (Node::Op(a_op, a_l, a_r), Node::Op(b_op, b_l, b_r)) => {
                 if a_op.as_str() == b_op {
