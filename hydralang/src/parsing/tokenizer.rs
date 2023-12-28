@@ -3,7 +3,7 @@
     
 use pest::{Parser, iterators::Pairs};
 use pest_derive::Parser;
-use crate::{stack::Stack, model::Constraint};
+use crate::{stack::Stack, model::{error::DSLError, Constraint}};
 
 pub type TokenStream = Vec<Token>; // TODO: This may later become an actual Stream, for now performance is lower priority than simplicity
 
@@ -59,13 +59,14 @@ fn parse_constraint<'a>(pairs: Pairs<'a, Rule>) -> Vec<Constraint> {
 }
 
 // TODO: Currently this only handles statements and function_def pairs are ignored. This will need to be revisited
-pub fn tokenize_script(input: &str) -> TokenizedScript {
+pub fn tokenize_script(input: &str) -> Result<TokenizedScript, DSLError> {
 
     let mut function_defs = Vec::new();
     let mut token_streams = Vec::new();
 
-    // TODO: Revisit Error Handling, for now we'll just panic
-    let parse = Tokenizer::parse(Rule::script, input).expect("Failed Lexer Stage").next().unwrap();
+    let attempted_parse = Tokenizer::parse(Rule::script, input);
+
+    let parse = attempted_parse.unwrap().next().unwrap();
 
 
     for line in parse.into_inner() {
@@ -98,7 +99,7 @@ pub fn tokenize_script(input: &str) -> TokenizedScript {
         }
     }
 
-    TokenizedScript { function_defs: function_defs, expressions: token_streams }
+    Ok(TokenizedScript { function_defs: function_defs, expressions: token_streams })
 
     
 }

@@ -70,12 +70,16 @@ fn mainloop() -> io::Result<()> {
                         return Ok(());
                     }
 
-                    let new_statement = script::Script::parse(input_buffer.as_str())
-                        .map_err(|_| io::Error::new(ErrorKind::InvalidData, "Error Parsing Statement"))?;
+                    if !(input_buffer.trim() == "") {
 
-                    script.merge(&new_statement);
-                    input_buffer.clear();
-                    script.run();
+                        let new_statement = script::Script::parse(input_buffer.as_str())
+                            .map_err(|_| io::Error::new(ErrorKind::InvalidData, "Error Parsing Statement"))?;
+
+                        script.merge(&new_statement);
+                        input_buffer.clear();
+                        script.run();
+                    
+                    }
                 }
 
             },

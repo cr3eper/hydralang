@@ -2,10 +2,10 @@
 
 // Parser is actually quite simple after tokenizer and shunting yard algorithm are applied, simply exists to map tokens to enums
 
-use crate::{model::{ Expression, Script, expression::Node, function::FunctionDef }, parsing::tokenizer::{tokenize_statement, tokenize_script}, stack::Stack};
+use crate::{model::{ Expression, Script, expression::Node, function::FunctionDef, error::DSLError }, parsing::tokenizer::{tokenize_statement, tokenize_script}, stack::Stack};
 use super::tokenizer::{OperandType, TokenStream};
 
-fn parse_tokens(tokens: TokenStream) -> Result<Expression, ()> {
+fn parse_tokens(tokens: TokenStream) -> Result<Expression, DSLError> {
 
     let mut operands = Stack::<Node>::new();
 
@@ -47,22 +47,22 @@ fn parse_tokens(tokens: TokenStream) -> Result<Expression, ()> {
         }
     }
 
-    operands.pop().map(|n| Expression::new(n) ).ok_or(())
+    operands.pop().map(|n| Expression::new(n) ).ok_or(DSLError::RuntimeException)
 
 }
 
 
-pub fn parse_statement(input: &str) -> Result<Expression, ()> {
+pub fn parse_statement(input: &str) -> Result<Expression, DSLError> {
 
     let tokens = tokenize_statement(input);
     parse_tokens(tokens)
 
 }
 
-pub fn parse_script(input: &str) -> Result<Script, ()> {
+pub fn parse_script(input: &str) -> Result<Script, DSLError> {
 
 
-    let token_script = tokenize_script(input);
+    let token_script = tokenize_script(input)?;
 
     let mut script = Script::new(Vec::new(), Vec::new() );
 

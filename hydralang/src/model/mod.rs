@@ -2,6 +2,7 @@ pub mod expression;
 pub mod expression_builder;
 pub mod function;
 pub mod symbol_table;
+pub mod error;
 
 pub use expression::Expression;
 
@@ -30,7 +31,7 @@ pub mod script {
 
     use crate::{parsing::parser::parse_script, visitor::{DefaultSimplifyVisitor, ExpressionModfierVisitor}};
 
-    use super::{function::{FunctionCollection, FunctionDef}, Expression};
+    use super::{function::{FunctionCollection, FunctionDef}, Expression, error::DSLError};
 
 
     #[derive(Clone)]
@@ -84,7 +85,7 @@ pub mod script {
             self.expressions.push(expression);
         }
 
-        pub fn parse(input: &str) -> Result<Self, ()> {
+        pub fn parse(input: &str) -> Result<Self, DSLError> {
             parse_script(input)
         }
 

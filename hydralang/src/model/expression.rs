@@ -2,7 +2,7 @@ use std::{cmp::Ordering, collections::HashMap};
 
 use crate::{traits::{ShallowEq, DeepEq}, parsing::parser::parse_statement};
 
-use super::symbol_table::SymbolTable;
+use super::{symbol_table::SymbolTable, error::DSLError};
 
 /// A wrapper around Nodes, if you're doing something directly with Node types, consider thinking about how you could do it with this instead.
 #[derive(Debug, Clone)]
@@ -50,7 +50,7 @@ impl Expression {
         Expression { root_node: root }
     }
 
-    pub fn parse(text: String) -> Result<Self, ()>  {
+    pub fn parse(text: String) -> Result<Self, DSLError>  {
         parse_statement(&text)
     }
 
@@ -152,7 +152,7 @@ impl ToString for Node {
                 }
 
                 format!("({})", interspersed.iter().map(|s| s.clone()).collect::<String>())
-            },
+            }, 
             FunctionCall { name, args } => {
                 format!("{}({})", name, args.iter().map(|node| node.to_string()).collect::<Vec<String>>().join(", "))
             },
