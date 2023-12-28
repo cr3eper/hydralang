@@ -2,7 +2,8 @@
 use std::error::Error;
 use std::fmt::Display;
 use std::io::{Write, self, ErrorKind, Stdout};
-use crossterm::event::{Event, KeyModifiers, KeyEvent, KeyCode, KeyEventKind};
+use std::time::Duration;
+use crossterm::event::{Event, KeyModifiers, KeyEvent, KeyCode, KeyEventKind, poll};
 use crossterm::style::Print;
 use crossterm::{ cursor, execute, event::read};
 use crossterm::terminal::{Clear, ClearType, size, enable_raw_mode, disable_raw_mode};
@@ -63,7 +64,8 @@ fn handle_event(app: &mut Application, event: Event) -> Result<(), WindowReturn>
 
                 if !(app.input_buffer.trim() == "") {
 
-                    let new_statement = script::Script::parse(app.input_buffer.as_str()).map_err(|e| WindowReturn::Error(Box::new(e)))?;
+                    let new_statement = script::Script::parse(app.input_buffer.as_str())
+                        .map_err(|e| WindowReturn::Error(Box::new(e) as Box<dyn Error>))?;
 
                     app.script.merge(&new_statement);
                     app.input_buffer.clear();

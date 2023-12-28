@@ -9,17 +9,6 @@ pub use expression::Expression;
 
 
 
-pub mod constraint {
-
-    #[derive(Clone)]
-    pub enum Constraint {
-        Range(i64, i64),
-        Type(String)
-    }
-
-}
-
-pub use constraint::Constraint;
 pub use script::Script;
 
 
@@ -118,8 +107,10 @@ pub mod script {
             let mut result = String::new();
     
             for func_collection in self.function_defs.values() {
-                result.push_str(func_collection.to_string().as_str());
-                result.push_str("\n");
+                if func_collection.to_string().as_str().trim() != "" {
+                    result.push_str(func_collection.to_string().as_str());
+                    result.push_str("\n");
+                }
             }
     
             for expr in &self.expressions {

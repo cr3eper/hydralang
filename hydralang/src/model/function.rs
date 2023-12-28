@@ -2,7 +2,7 @@ use std::{collections::HashMap, rc::Rc};
 
 use crate::{traits::Callable, visitor::{VariableReplacer, ExpressionModfierVisitor}};
 
-use super::{Expression, Constraint, expression::Node, symbol_table::SymbolTable};
+use super::{Expression, expression::Node, symbol_table::SymbolTable};
 
 
 
@@ -52,7 +52,7 @@ pub struct FunctionDef {
     name: String,
     args: Vec<Expression>,
     expr: Rc<dyn Callable>,
-    constraints: Vec<Constraint>,
+    constraints: Vec<Expression>,
     is_system_function: bool // Some functions require a system based implementation
 }
 
@@ -86,11 +86,11 @@ impl ToString for FunctionDef {
 
 impl FunctionDef {
 
-    pub fn new(name: String, args: Vec<Expression>, expr: Expression, constraints: Vec<Constraint>) -> Self {
+    pub fn new(name: String, args: Vec<Expression>, expr: Expression, constraints: Vec<Expression>) -> Self {
         FunctionDef { name, args, expr: Rc::new(ExpressionTemplate::new(expr)) as Rc<dyn Callable> ,  constraints, is_system_function: false }
     }
 
-    pub fn new_system_function_def(name: String, args: Vec<Expression>, internal_function: RustInternalFunction, constraints: Vec<Constraint>) -> Self {
+    pub fn new_system_function_def(name: String, args: Vec<Expression>, internal_function: RustInternalFunction, constraints: Vec<Expression>) -> Self {
         FunctionDef { name, args, expr: Rc::new(internal_function) as Rc<dyn Callable> ,  constraints, is_system_function: true }
     }
 

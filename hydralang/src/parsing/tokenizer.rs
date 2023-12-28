@@ -3,7 +3,7 @@
     
 use pest::{Parser, iterators::Pairs};
 use pest_derive::Parser;
-use crate::{stack::Stack, model::{error::DSLError, Constraint}};
+use crate::{stack::Stack, model::{error::DSLError, Expression}};
 
 pub type TokenStream = Vec<Token>; // TODO: This may later become an actual Stream, for now performance is lower priority than simplicity
 
@@ -28,7 +28,7 @@ pub struct TokenFunctionDef {
     pub name: String,
     pub args: Vec<TokenStream>,
     pub tokens: TokenStream,
-    pub constraints: Vec<Constraint>
+    pub constraints: Vec<TokenStream>
 }
 
 #[derive(Parser)]
@@ -40,8 +40,7 @@ pub struct TokenizedScript{
     pub expressions: Vec<TokenStream>
 }
 
-// We can just straight up parse the constraint here and It makes life easier to do so, might move this elsewhere if connstraints become more complex
-fn parse_constraint<'a>(pairs: Pairs<'a, Rule>) -> Vec<Constraint> {
+fn parse_constraint<'a>(pairs: Pairs<'a, Rule>) -> Vec<TokenStream> {
     let mut constraints = Vec::new();
 
     //TODO: Implement proper constraint parsing, for now we'll just say there are no constraints on the function
@@ -180,7 +179,7 @@ pub fn op_precedence(op: &str) -> usize {
     }
 }
 
-pub fn shunting_yard(tokens: TokenStream) -> TokenStream {
+pub fn shunting_yard(tokens: TokenStream) -> Result<TokenStream, DSLError> {
 
     let mut result = Vec::new();
     let mut operators = Stack::<Token>::new();
@@ -195,7 +194,7 @@ pub fn shunting_yard(tokens: TokenStream) -> TokenStream {
                     let stack_precedence = op_precedence(operators.peek().map(|t| t.as_operation() ).unwrap_or(&"none"));
                     if stack_precedence < precedence { break; }
 
-                    let stack_op = operators.pop().expect("Unexpected error during tokenization, attempted to pop an operator that does not exist");
+                    let stack_op = operators.pop().ok_or("Unexpected error during tokenization, attempted to pop an operator that does not exist")?;
                     result.push(stack_op);
 
                 }
@@ -215,7 +214,7 @@ pub fn shunting_yard(tokens: TokenStream) -> TokenStream {
         result.push(operators.pop().unwrap());
     }
 
-    result
+    Ok(result)
 
 }
 

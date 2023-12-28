@@ -74,7 +74,18 @@ pub fn parse_script(input: &str) -> Result<Script, DSLError> {
             parsed_function_args.push(parse_tokens(arg)?);
         }
 
-        let parsed_function = FunctionDef::new(function.name, parsed_function_args, parse_tokens(function.tokens)?, function.constraints);
+        let mut parsed_constraints_iter = function.constraints.iter().map(|&s| parse_tokens(s));
+        let mut parsed_constraints = Vec::new();
+        for constraint in parsed_constraints_iter {
+            parsed_constraints.push(constraint?);
+        }
+
+        let parsed_function = FunctionDef::new(
+            function.name, 
+            parsed_function_args, 
+            parse_tokens(function.tokens)?, 
+            parsed_constraints
+        );
 
         script.add_function_def(parsed_function);
     }

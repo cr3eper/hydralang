@@ -1,4 +1,4 @@
-use std::{cmp::Ordering, collections::HashMap};
+use std::cmp::Ordering;
 
 use crate::{traits::{ShallowEq, DeepEq}, parsing::parser::parse_statement};
 

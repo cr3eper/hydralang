@@ -1,16 +1,18 @@
-use std::{error, fmt::Display};
+use std::{error::{self, Error}, fmt::{Display, Debug}};
 
 
 #[derive(Debug)]
 pub enum DSLError{
-    GrammarParsingError(Box<dyn error::Error>),
+    LexerError(String, Option<Box<dyn Error>>),
+    ParserError(String, Option<Box<dyn Error>>),
     RuntimeException
 }
 
-impl error::Error for DSLError {
+impl Error for DSLError {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
-            DSLError::GrammarParsingError(e) => Some(e.as_ref()),
+            DSLError::LexerError(msg, maybe_backtrace) => maybe_backtrace.map(|e| e.as_ref()),
+            DSLError::ParserError(msg, maybe_backtrace) => maybe_backtrace.map(|e| e.as_ref()),
             DSLError::RuntimeException => None
         }
     }
@@ -25,7 +27,14 @@ impl error::Error for DSLError {
 impl Display for DSLError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            DSLError::GrammarParsingError(e) => e.fmt(f),
+            DSLError::LexerError(msg, e) => {
+                writeln!(f, "Lexer Error: {}", msg);
+                e.fmt(f)
+            },
+            DSLError::ParserError(msg, e) => {
+                writeln!(f, "Parser Error: {}", msg);
+                e.fmt(f)
+            }
             DSLError::RuntimeException => f.write_str("Genric Runtime Exception"),
         }
     }
