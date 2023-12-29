@@ -54,7 +54,7 @@ fn parse_tokens(tokens: TokenStream) -> Result<Expression, DSLError> {
 
 pub fn parse_statement(input: &str) -> Result<Expression, DSLError> {
 
-    let tokens = tokenize_statement(input);
+    let tokens = tokenize_statement(input)?;
     parse_tokens(tokens)
 
 }
@@ -74,7 +74,7 @@ pub fn parse_script(input: &str) -> Result<Script, DSLError> {
             parsed_function_args.push(parse_tokens(arg)?);
         }
 
-        let mut parsed_constraints_iter = function.constraints.iter().map(|&s| parse_tokens(s));
+        let parsed_constraints_iter = function.constraints.iter().map(|s| parse_tokens(s.clone()));
         let mut parsed_constraints = Vec::new();
         for constraint in parsed_constraints_iter {
             parsed_constraints.push(constraint?);

@@ -1,0 +1,37 @@
+
+# Boolean operations, eventually I'd like these to be operations and functions eg. not(a) = !a
+not(1) = 0
+not(0) = 1
+
+and(1, 1) = 1
+and(x, 0) = 0
+and(0, x) = 0
+
+or(1, x) = 1
+or(x, 1) = 1
+or(0, 0) = 0 
+
+# Factorial Function definition
+fact(0) = 1
+fact(1) = 1
+fact(n) = eval(n * fact(n - 1))
+
+# Ugly system function wrappers, basically if a evaluates to number and b evaluates to number we can perform primitive simplifications on them like you learned in primary school
+eval(a + b) = _addNumbers(eval(a), eval(b)) where { isNum(eval(a)), isNum(eval(b)) }
+eval(a * b) = _multiplyNumbers(eval(a), eval(b)) where { isNum(eval(a)), isNum(eval(b)) }
+eval(a ^ b) = _exponentiateNumbers(eval(a), eval(b)) where { isNum(eval(a)), isNum(eval(b)) }
+
+# Derivatives of sums need to be handled
+df(a + b, x) = df(a, x) + df(b, x)
+df(a - b, x) = df(a, x) - df(b, x)
+
+# Derivate of a constant is Zero
+df(c, x) = 0 where { not(contains(c, x)) }
+
+# Product rule definition
+df(a * b, x) = df(a) * b + df(b) * a where { contains(a, x), contains(b, x) }
+
+# Basic power rule differentiation 
+df(a * x ^ n, x) = (a - n) * x^(n-1) where { not(contains(a, x)), not(contains(n, x)) }
+df(x ^ n, x) = df(1 * x ^ n, x) where { not(contains(n, x)) }
+df(a * x) = a
