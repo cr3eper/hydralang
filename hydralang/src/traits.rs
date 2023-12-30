@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::model::{expression::Node, Expression, symbol_table::SymbolTable};
 
 
@@ -70,7 +68,7 @@ impl DeepEq for Expression {
 
 impl StructuralEq for Node {
     
-        fn structural_eq(&self, other: &Self) -> bool {
+        fn structural_eq(&self, _other: &Self) -> bool {
             todo!()
         }
         

@@ -11,8 +11,8 @@ pub enum DSLError{
 impl Error for DSLError {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
-            DSLError::LexerError(msg, maybe_backtrace) => if let Some(e) = maybe_backtrace { Some(e.as_ref()) } else { None },
-            DSLError::ParserError(msg, maybe_backtrace) => if let Some(e) = maybe_backtrace { Some(e.as_ref()) } else { None },
+            DSLError::LexerError(_, maybe_backtrace) => if let Some(e) = maybe_backtrace { Some(e.as_ref()) } else { None },
+            DSLError::ParserError(_, maybe_backtrace) => if let Some(e) = maybe_backtrace { Some(e.as_ref()) } else { None },
             DSLError::RuntimeException => None
         }
     }

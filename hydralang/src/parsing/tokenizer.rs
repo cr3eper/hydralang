@@ -98,7 +98,7 @@ pub fn tokenize_script(input: &str) -> Result<TokenizedScript, DSLError> {
 
 pub fn tokenize_function(input: &str) -> TokenFunctionDef {
 
-    let parse = Tokenizer::parse(Rule::function_def, input).expect("Failed Lexer Stage").next().unwrap();
+    let _parse = Tokenizer::parse(Rule::function_def, input).expect("Failed Lexer Stage").next().unwrap();
     todo!()
 
 }
@@ -245,8 +245,8 @@ impl Token {
 #[cfg(test)]
 mod tests {
 
-    use crate::{model::{Expression, expression_builder::*}, parsing::tokenizer::{Token, OperandType, tokenize_statement}, traits::DeepEq};
-    use crate::parsing::parser::{parse_statement, parse_script};
+    use crate::{model::expression_builder::*, parsing::tokenizer::{Token, OperandType, tokenize_statement}, traits::DeepEq};
+    use crate::parsing::parser::parse_statement;
 
     #[test]
     fn test_shunting_yard() {
@@ -341,9 +341,9 @@ mod tests {
 
     // TODO: I Don't currently care enough about this issue to fix it
     fn test_negation_parsing() {
-        let test = "10 + -5"; // We somehow need to identify this negative as an LOP or else we would get an error
+        let _test = "10 + -5"; // We somehow need to identify this negative as an LOP or else we would get an error
 
-        let test2 = "-1 -5 - -6"; // Weird AF but technically a valid expression and should be handled as expected
+        let _test2 = "-1 -5 - -6"; // Weird AF but technically a valid expression and should be handled as expected
 
 
 

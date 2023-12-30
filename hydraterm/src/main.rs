@@ -1,9 +1,8 @@
 
 use std::error::Error;
 use std::fmt::Display;
-use std::io::{Write, self, ErrorKind, Stdout};
-use std::time::Duration;
-use crossterm::event::{Event, KeyModifiers, KeyEvent, KeyCode, KeyEventKind, poll};
+use std::io::{Write, self, Stdout};
+use crossterm::event::{Event, KeyModifiers, KeyCode, KeyEventKind};
 use crossterm::style::Print;
 use crossterm::{ cursor, execute, event::read};
 use crossterm::terminal::{Clear, ClearType, size, enable_raw_mode, disable_raw_mode};
@@ -17,7 +16,7 @@ enum WindowReturn {
 }
 
 impl Display for WindowReturn {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         todo!()
     }
 }

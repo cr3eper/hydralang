@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use crate::{model::{Expression, expression::Node, Script, symbol_table::SymbolTable}, traits::DeepEq};
 
 // TODO: Currently expressions are immutable and need to be completely rebuilt to be modified. This makes sense for now and helps avoid many bugs, but optimisations are possible that have not been implemneted
@@ -184,7 +182,7 @@ mod tests {
     fn test_variable_substitution() {
         let test_script = "f(x) = x^2
         f(10 + 2)";
-        let mut script = Script::parse(test_script).unwrap();
+        let script = Script::parse(test_script).unwrap();
         println!("function args: {:?}", script.get_function_defs().get(0).unwrap().get_args());
         let expr = script.get_expression(0).unwrap().clone();
         println!("orginal expression {:?}", expr.clone());
