@@ -96,7 +96,7 @@ impl PartialOrd for Node {
                         "*" => 2,
                         "/" => 2,
                         "^" => 3,
-                        _ => panic!("Unexpected Operation")
+                        _ => 4
                     }
                 },
                 LOp(_, _) => 5

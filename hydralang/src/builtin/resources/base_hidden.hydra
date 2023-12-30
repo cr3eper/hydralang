@@ -1,0 +1,21 @@
+
+# Boolean operations, eventually I'd like these to be operations and functions eg. not(a) = !a
+not(1) = 0
+not(0) = 1
+
+and(1, 1) = 1
+and(x, 0) = 0
+and(0, x) = 0
+
+or(1, x) = 1
+or(x, 1) = 1
+or(0, 0) = 0 
+
+# Ugly system function wrappers, basically if a evaluates to number and b evaluates to number we can perform primitive simplifications on them like you learned in primary school
+eval(a + b) = _addNumbers(eval(a), eval(b)) where { isNum(eval(a)), isNum(eval(b)) }
+eval(a - b) = _subtractNumbers(eval(a), eval(b)) where { isNum(eval(a)), isNum(eval(b)) }
+eval(a * b) = _multiplyNumbers(eval(a), eval(b)) where { isNum(eval(a)), isNum(eval(b)) }
+eval(a ^ b) = _exponentiateNumbers(eval(a), eval(b)) where { isNum(eval(a)), isNum(eval(b)) }
+eval(a^1) = a
+eval(a/1) = a
+eval(a) = a # eval should always default to the identity function if nothing can be done

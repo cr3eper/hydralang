@@ -138,6 +138,8 @@ pub mod base_internal{
 }
 
 pub fn base_config() -> Script {
+
+    let default_script_hidden_functions = include_str!("resources/base_hidden.hydra");
     let default_script = include_str!("resources/base.hydra");
 
     let function_defs = vec![
@@ -149,9 +151,15 @@ pub fn base_config() -> Script {
         RustInternalFunctionBuilder::new().name("contains").args(&["a", "b"]).function(base_internal::contains_expr).build()
     ];
 
+    let mut base_hidden = Script::parse(default_script_hidden_functions).expect("Failed to parse base_hidden.hydra file");
+    base_hidden.hide_all_function_defs();
+    
+
     let mut base = Script::parse(default_script).expect("Failed to parse base.hydra file");
 
     base.merge(&Script::new( function_defs, Vec::new()));
+    base.merge(&base_hidden);
+
     base
 }
 

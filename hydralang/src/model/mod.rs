@@ -36,6 +36,12 @@ pub mod script {
             script
         }
 
+        pub fn hide_all_function_defs(&mut self) {
+            for func_coll in self.function_defs.values_mut() {
+                func_coll.hide()
+            }
+        }
+
         pub fn add_function_def(&mut self, function_def: FunctionDef) {
             
             let name = function_def.get_name().clone();

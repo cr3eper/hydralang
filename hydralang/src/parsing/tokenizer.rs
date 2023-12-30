@@ -168,7 +168,7 @@ pub fn op_precedence(op: &str) -> usize {
         "-" => 2,
         "+" => 2,
         "none" => 0, // None is specifically reserved for when the stack of operators is empty, it's not a real operator
-        _ => panic!("Unexpected operator encountered!"), // unknown is lowest precedence
+        _ => 1
     }
 }
 

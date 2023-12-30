@@ -13,8 +13,8 @@ fn parse_tokens(tokens: TokenStream) -> Result<Expression, DSLError> {
         match token {
             super::tokenizer::Token::Operation(op) => {
 
-                let right = operands.pop().unwrap();
-                let left = operands.pop().unwrap();
+                let right = operands.pop().ok_or(DSLError::ParserError(format!("Invalid syntax {} does not have anything to operate on.", op), None))?;
+                let left = operands.pop().ok_or(DSLError::ParserError(format!("Invalid syntax {} does not have anything to operate on.", op), None))?;
                 let newnode = Node::Op(op, Box::new(left), Box::new(right));
                 operands.push(newnode);
 

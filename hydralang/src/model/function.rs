@@ -103,6 +103,10 @@ impl FunctionDef {
         self.args.clone()
     }
 
+    pub fn hide(&mut self) {
+        self.is_system_function = true;
+    }
+
     pub fn try_apply<'a>(&self, input_args: &'a Vec<Expression>, script: &'a Script) -> Option<Expression> {
 
         if input_args.len() != self.args.len() { return None; }
@@ -141,6 +145,12 @@ impl FunctionCollection {
     pub fn add_function_def(&mut self, function_def: FunctionDef) { self.function_defs.push(function_def); }
 
     pub fn get_function_defs(&self) -> Vec<FunctionDef> { self.function_defs.clone() }
+
+    pub fn hide(&mut self) {
+        for func in self.function_defs.iter_mut() {
+            func.hide();
+        }
+    }
 
     pub fn try_apply<'a>(&self, args: &'a Vec<Expression>, script: &'a Script) -> Option<Expression> {
 
