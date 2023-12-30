@@ -88,8 +88,8 @@ pub fn base_config() -> Script {
         RustInternalFunctionBuilder::new().name("isNum").args(&["arg"]).function(base_internal::is_num).build()
     ];
 
-    let mut base = Script::parse(fs::read_to_string("resources/base.hydra").expect("Cannot open base.hydra").as_str()).expect("Failed to parse base.hydra file");
-
+    //let mut base = Script::parse(fs::read_to_string("resources/base.hydra").expect("Cannot open base.hydra").as_str()).expect("Failed to parse base.hydra file");
+    let mut base = Script::new(Vec::new(), Vec::new());
 
     base.merge(&Script::new( function_defs, Vec::new()));
     base

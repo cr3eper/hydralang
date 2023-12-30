@@ -5,13 +5,7 @@ pub mod symbol_table;
 pub mod error;
 
 pub use expression::Expression;
-
-
-
-
 pub use script::Script;
-
-
 
 
 
@@ -79,7 +73,7 @@ pub mod script {
         }
 
         pub fn exec_function(&self, name: &str, args: Vec<Expression>) -> Option<Expression> {
-            self.function_defs.get(&name.to_string())?.try_apply(&args)
+            self.function_defs.get(&name.to_string())?.try_apply(&args, &self)
         }
 
         pub fn merge(&mut self, other: &Self) {
@@ -91,7 +85,7 @@ pub mod script {
 
         pub fn run(&mut self) {
             for line in 0..self.expressions.len() {
-                let mut simplify = DefaultSimplifyVisitor::new(self.clone()); //TODO: Fix dumb clone
+                let mut simplify = DefaultSimplifyVisitor::new(&self); //TODO: Fix dumb clone
                 let new_expr = simplify.visit(self.expressions.get(line).unwrap().clone());
                 self.expressions[line] = new_expr;
             }

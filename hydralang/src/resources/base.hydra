@@ -20,6 +20,7 @@ fact(n) = eval(n * fact(n - 1))
 eval(a + b) = _addNumbers(eval(a), eval(b)) where { isNum(eval(a)), isNum(eval(b)) }
 eval(a * b) = _multiplyNumbers(eval(a), eval(b)) where { isNum(eval(a)), isNum(eval(b)) }
 eval(a ^ b) = _exponentiateNumbers(eval(a), eval(b)) where { isNum(eval(a)), isNum(eval(b)) }
+eval(x) = x # eval should always default to the identity function if nothing can be done
 
 # Derivatives of sums need to be handled
 df(a + b, x) = df(a, x) + df(b, x)
@@ -29,7 +30,10 @@ df(a - b, x) = df(a, x) - df(b, x)
 df(c, x) = 0 where { not(contains(c, x)) }
 
 # Product rule definition
-df(a * b, x) = df(a) * b + df(b) * a where { contains(a, x), contains(b, x) }
+df(a * b, x) = df(a, x) * b + df(b, x) * a where { contains(a, x), contains(b, x) }
+
+# Quotient rule
+df(a / b, x) = (b * df(a, x) - a * df(b, x)) / b^2 where { contains(a, x), contains(b, x) }
 
 # Basic power rule differentiation 
 df(a * x ^ n, x) = (a - n) * x^(n-1) where { not(contains(a, x)), not(contains(n, x)) }

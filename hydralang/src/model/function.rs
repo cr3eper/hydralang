@@ -1,8 +1,8 @@
-use std::{collections::HashMap, rc::Rc};
+use std::rc::Rc;
 
-use crate::{traits::Callable, visitor::{VariableReplacer, ExpressionModfierVisitor}};
-
-use super::{Expression, expression::Node, symbol_table::SymbolTable};
+use crate::{traits::{Callable, DeepEq}, visitor::{VariableReplacer, ExpressionModfierVisitor, DefaultSimplifyVisitor}};
+use crate::model::expression_builder::num;
+use super::{Expression, expression::Node, symbol_table::SymbolTable, Script};
 
 
 
@@ -76,7 +76,8 @@ impl ToString for FunctionDef {
         result.push_str(self.expr.to_string().as_str());
 
         if self.constraints.len() != 0 {
-            result.push_str(" where { #TODO: Use Constraints #");
+            result.push_str(" where { ");
+            result.push_str(self.constraints.iter().map(|s| s.to_string()).collect::<Vec<String>>().join(", ").as_str());
             result.push_str(" }");
         }
 
@@ -102,7 +103,7 @@ impl FunctionDef {
         self.args.clone()
     }
 
-    pub fn try_apply<'a>(&self, input_args: &'a Vec<Expression>) -> Option<Expression> {
+    pub fn try_apply<'a>(&self, input_args: &'a Vec<Expression>, script: &'a Script) -> Option<Expression> {
 
         if input_args.len() != self.args.len() { return None; }
         
@@ -112,6 +113,16 @@ impl FunctionDef {
             if !is_match {
                 return None;
             }
+        }
+
+        // Check if contraints are valid
+        let mut constraint_eval = self.constraints.iter()
+            .map(|e| ExpressionTemplate::new(e.clone()))
+            .map(|t| t.call(symbol_table.clone()))
+            .map(|e| DefaultSimplifyVisitor::new(script).visit(e));
+
+        if !(constraint_eval.all(|e| e.deep_eq(&Expression::new(num(1))))) {
+            return None;
         }
 
         Some(self.expr.call(symbol_table))
@@ -131,10 +142,10 @@ impl FunctionCollection {
 
     pub fn get_function_defs(&self) -> Vec<FunctionDef> { self.function_defs.clone() }
 
-    pub fn try_apply<'a>(&self, args: &'a Vec<Expression>) -> Option<Expression> {
+    pub fn try_apply<'a>(&self, args: &'a Vec<Expression>, script: &'a Script) -> Option<Expression> {
 
         for func in self.function_defs.iter() {
-            if let Some(result) = func.try_apply(args) {
+            if let Some(result) = func.try_apply(args, script) {
                 return Some(result);
             }
         }

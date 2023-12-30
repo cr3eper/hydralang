@@ -37,17 +37,17 @@ pub trait ExpressionModfierVisitor {
 
 }
 
-pub struct DefaultSimplifyVisitor {
-    script: Script
+pub struct DefaultSimplifyVisitor<'a> {
+    script: &'a Script
 }
 
-impl DefaultSimplifyVisitor {
-    pub fn new(script: Script) -> Self {
+impl<'a> DefaultSimplifyVisitor<'a> {
+    pub fn new(script: &'a Script) -> Self {
         DefaultSimplifyVisitor{ script }
     }
 }
 
-impl ExpressionModfierVisitor for DefaultSimplifyVisitor {
+impl<'a> ExpressionModfierVisitor for DefaultSimplifyVisitor<'a> {
 
     fn visit_vec(&mut self, v: Vec<Node>) -> Node {
 
@@ -148,7 +148,8 @@ mod tests {
     fn test_remove_unneeded_vec() {
 
         let test = "x^2 + (2 * x + ((10 - 4))) * 10";
-        let mut visitor = DefaultSimplifyVisitor::new(Script::new(Vec::new(), Vec::new()));
+        let script = Script::new(Vec::new(), Vec::new());
+        let mut visitor = DefaultSimplifyVisitor::new(&script);
 
         let expect = Expression::new( 
          add(
@@ -179,7 +180,7 @@ mod tests {
         println!("function args: {:?}", script.get_function_defs().get(0).unwrap().get_args());
         let expr = script.get_expression(0).unwrap().clone();
         println!("orginal expression {:?}", expr.clone());
-        let mut visitor = DefaultSimplifyVisitor::new(script);
+        let mut visitor = DefaultSimplifyVisitor::new(&script);
         let result = visitor.visit(expr);
         println!("{:?}", result);
         //assert!(result.deep_eq(&Expression::parse("(10+2)^2".to_string()).unwrap()));
