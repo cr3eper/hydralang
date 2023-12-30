@@ -2,8 +2,16 @@
 
 use crate::model::expression::Node;
 
+pub fn op(op: &str, left: Node, right: Node) -> Node {
+    Node::Op(op.to_string(), Box::new(left), Box::new(right))
+}
+
 pub fn add(left: Node, right: Node) -> Node {
     Node::Op("+".to_string(), Box::new(left), Box::new(right))
+}
+
+pub fn lop(op: &str, child: Node) -> Node {
+    Node::LOp(op.to_string(), Box::new(child))
 }
 
 pub fn sub(left: Node, right: Node) -> Node {
@@ -28,6 +36,10 @@ pub fn neg(node: Node) -> Node {
 
 pub fn num(n: i64) -> Node {
     Node::Num(n)
+}
+
+pub fn float(n: f64) -> Node {
+    Node::Float(n)
 }
 
 pub fn var(s: String) -> Node {

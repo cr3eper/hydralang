@@ -14,13 +14,16 @@ or(0, 0) = 0
 # Factorial Function definition
 fact(0) = 1
 fact(1) = 1
-fact(n) = eval(n * fact(n - 1))
+fact(n) = n * fact(n - 1)
 
 # Ugly system function wrappers, basically if a evaluates to number and b evaluates to number we can perform primitive simplifications on them like you learned in primary school
 eval(a + b) = _addNumbers(eval(a), eval(b)) where { isNum(eval(a)), isNum(eval(b)) }
+eval(a - b) = _subtractNumbers(eval(a), eval(b)) where { isNum(eval(a)), isNum(eval(b)) }
 eval(a * b) = _multiplyNumbers(eval(a), eval(b)) where { isNum(eval(a)), isNum(eval(b)) }
 eval(a ^ b) = _exponentiateNumbers(eval(a), eval(b)) where { isNum(eval(a)), isNum(eval(b)) }
-eval(x) = x # eval should always default to the identity function if nothing can be done
+eval(a^1) = a
+eval(a/1) = a
+eval(a) = a # eval should always default to the identity function if nothing can be done
 
 # Derivatives of sums need to be handled
 df(a + b, x) = df(a, x) + df(b, x)
@@ -36,6 +39,7 @@ df(a * b, x) = df(a, x) * b + df(b, x) * a where { contains(a, x), contains(b, x
 df(a / b, x) = (b * df(a, x) - a * df(b, x)) / b^2 where { contains(a, x), contains(b, x) }
 
 # Basic power rule differentiation 
-df(a * x ^ n, x) = (a - n) * x^(n-1) where { not(contains(a, x)), not(contains(n, x)) }
+df(a * x ^ n, x) = (a * n) * x^(n-1) where { not(contains(a, x)), not(contains(n, x)) }
 df(x ^ n, x) = df(1 * x ^ n, x) where { not(contains(n, x)) }
-df(a * x) = a
+df(a * x) = a where { not(contains(a, x)) }
+

@@ -1,4 +1,5 @@
 use std::fs;
+use std::path::Path;
 
 use crate::model::expression::Node;
 use crate::model::function::RustInternalFunction;
@@ -40,7 +41,56 @@ impl RustInternalFunctionBuilder {
 }
 
 pub mod base_internal{
-    use crate::model::{expression::Node, Expression};
+    use crate::{model::{expression::Node, Expression}, visitor::ImmutableExpressionVisitor, traits::DeepEq};
+    use crate::model::expression_builder::*;
+
+    pub struct ExpressionContainsVisitor {
+        expected_expr: Expression
+    }
+
+    impl ExpressionContainsVisitor {
+        pub fn new(expected_expr: Expression) -> Self {
+            Self { expected_expr }
+        }
+    }
+
+    impl ImmutableExpressionVisitor<bool> for ExpressionContainsVisitor {
+
+        fn visit_op(&self, op_type: &String, l: &Node, r: &Node) -> bool {
+            if Expression::new(op(&op_type, l.clone(), r.clone())).deep_eq(&self.expected_expr) { return true; }
+            self.visit_node(l) | self.visit_node(r)
+        }
+
+        fn visit_lop(&self, op_type: &String, child: &Node) -> bool {
+            if Expression::new(lop(&op_type, child.clone())).deep_eq(&self.expected_expr) { return true; }
+            self.visit_node(child)
+        }
+
+        fn visit_num(&self, n: &i64) -> bool {
+            if Expression::new(num(*n)).deep_eq(&self.expected_expr) { return true; }
+            false
+        }
+
+        fn visit_float(&self, n: &f64) -> bool {
+            if Expression::new(float(*n)).deep_eq(&self.expected_expr) { return true; }
+            false
+        }
+
+        fn visit_var(&self, name: &String) -> bool {
+            if Expression::new(var(name.clone())).deep_eq(&self.expected_expr) { return true; }
+            false
+        }
+
+        fn visit_vec(&self, v: &Vec<Node>) -> bool {
+            if Expression::new(vector(v.clone())).deep_eq(&self.expected_expr) { return true; }
+            v.iter().any(|n| self.visit_node(n))
+        }
+
+        fn visit_function_call(&self, name: &String, args: &Vec<Node>) -> bool {
+            if Expression::new(func_call(name.clone(), args.clone())).deep_eq(&self.expected_expr) { return true; }
+            args.iter().any(|n| self.visit_node(n))
+        }
+    }
 
     pub fn add_nums(args: &[Node]) -> Expression {
         match args {
@@ -77,19 +127,32 @@ pub mod base_internal{
         }
     }
 
+    pub fn contains_expr(args: &[Node]) -> Expression {
+        match args {
+            [a, b] => if ExpressionContainsVisitor::new(Expression::new(b.clone())).visit(Expression::new(a.clone())) {
+                Expression::new(num(1))
+            } else {
+                Expression::new(num(0))
+            },
+            _ => Expression::new(Node::Num(0))
+        }
+    }
+
 }
 
 pub fn base_config() -> Script {
+    let default_script = include_str!("resources/base.hydra");
+
     let function_defs = vec![
         RustInternalFunctionBuilder::new().name("_addNumbers").args(&["a", "b"]).function(base_internal::add_nums).build(),
         RustInternalFunctionBuilder::new().name("_subtractNumbers").args(&["a", "b"]).function(base_internal::sub_nums).build(),
         RustInternalFunctionBuilder::new().name("_multiplyNumbers").args(&["a", "b"]).function(base_internal::multiply_nums).build(),
         RustInternalFunctionBuilder::new().name("_exponentiateNumbers").args(&["a", "b"]).function(base_internal::exponentiate_nums).build(),
-        RustInternalFunctionBuilder::new().name("isNum").args(&["arg"]).function(base_internal::is_num).build()
+        RustInternalFunctionBuilder::new().name("isNum").args(&["arg"]).function(base_internal::is_num).build(),
+        RustInternalFunctionBuilder::new().name("contains").args(&["a", "b"]).function(base_internal::contains_expr).build()
     ];
 
-    //let mut base = Script::parse(fs::read_to_string("resources/base.hydra").expect("Cannot open base.hydra").as_str()).expect("Failed to parse base.hydra file");
-    let mut base = Script::new(Vec::new(), Vec::new());
+    let mut base = Script::parse(default_script).expect("Failed to parse base.hydra file");
 
     base.merge(&Script::new( function_defs, Vec::new()));
     base

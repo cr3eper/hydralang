@@ -42,12 +42,33 @@ pub struct DefaultSimplifyVisitor<'a> {
 }
 
 impl<'a> DefaultSimplifyVisitor<'a> {
+
     pub fn new(script: &'a Script) -> Self {
         DefaultSimplifyVisitor{ script }
     }
+
 }
 
 impl<'a> ExpressionModfierVisitor for DefaultSimplifyVisitor<'a> {
+
+    fn visit_node(&mut self, n: Node) -> Node {
+        let unsimplified_result = match n {
+            Node::Op(op_type, box l, box r) => self.visit_op(op_type, l, r),
+            Node::LOp(op_type, box child) => self.visit_lop(op_type, child),
+            Node::Num(n) => self.visit_num(n),
+            Node::Float(n) => self.visit_float(n),
+            Node::Var(name) => self.visit_var(name),
+            Node::Vector(v) => self.visit_vec(v),
+            Node::FunctionCall { name, args } => self.visit_function_call(name, args)
+        };
+
+        let result = self.script.exec_function("eval", vec![Expression::new(unsimplified_result.clone())]);
+
+        match result {
+            Some(e) => if e.deep_eq(&Expression::new(unsimplified_result)) { e.get_root_node().clone() } else { self.visit_node(e.get_root_node().clone()) },
+            None => unsimplified_result
+        }
+    }
 
     fn visit_vec(&mut self, v: Vec<Node>) -> Node {
 
@@ -60,8 +81,10 @@ impl<'a> ExpressionModfierVisitor for DefaultSimplifyVisitor<'a> {
 
     // We always want to "simplify" function calls by applying them, or else what's the point in having them
     fn visit_function_call(&mut self, name: String, args: Vec<Node>) -> Node {
+
+        let args = args.into_iter().map(|n| self.visit_node(n)).collect::<Vec<Node>>();
         if let Some(result) = self.script.exec_function(name.as_str(), args.iter().map(|n| Expression::new(n.clone())).collect()) {
-            result.get_root_node().clone()
+            self.visit_node(result.get_root_node().clone())
         }else {
             Node::FunctionCall { name, args }
         }
@@ -98,21 +121,6 @@ pub trait ImmutableExpressionVisitor<T> {
     
 }
 
-pub struct CommutativeExpressionMatcher {
-    target: Expression
-}
-
-impl CommutativeExpressionMatcher {
-
-    pub fn new(target: Expression) -> Self {
-        CommutativeExpressionMatcher { target }
-    }
-
-    pub fn matches(&self, e: &Expression) -> bool {
-        self.target.get_root_node().deep_eq(e.get_root_node())
-    }
-
-}
 
 pub struct VariableReplacer {
     symbol_table: SymbolTable
