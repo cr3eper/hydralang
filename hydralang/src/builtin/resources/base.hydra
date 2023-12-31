@@ -15,5 +15,5 @@ df(a / b, x) = (b * df(a, x) - a * df(b, x)) / b^2 where { contains(a, x), conta
 # Basic power rule differentiation 
 df(a * x ^ n, x) = (a * n) * x^(n-1) where { not(contains(a, x)), not(contains(n, x)) }
 df(x ^ n, x) = df(1 * x ^ n, x) where { not(contains(n, x)) }
-df(a * x) = a where { not(contains(a, x)) }
+df(a * x, x) = a where { not(contains(a, x)) }
 

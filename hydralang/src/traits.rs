@@ -37,6 +37,9 @@ impl DeepEq for Node {
             (Op(s1, a1, a2), Op(s2, b1, b2)) => s1 == s2 && a1.deep_eq(b1) && a2.deep_eq(b2),
             (LOp(s1, a), LOp(s2, b)) => s1 == s2 && a.deep_eq(b),
             (Float(f1), Float(f2)) => f1 == f2,
+            (FunctionCall{name: n1, args: args1}, FunctionCall{name: n2, args: args2}) => 
+                n1 == n2 && args1.len() == args2.len() && 
+                args1.iter().zip(args2.iter()).all(|(a, b)| a.deep_eq(b)),
             _ => false
         }
     }
