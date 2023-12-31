@@ -38,7 +38,7 @@ impl RustInternalFunctionBuilder {
 }
 
 pub mod base_internal{
-    use crate::{model::{expression::Node, Expression}, visitor::ImmutableExpressionVisitor, traits::DeepEq};
+    use crate::{model::{expression::Node, Expression}, visitor::ImmutableExpressionVisitor, traits::DeepEq, algorithms::gcd};
     use crate::model::expression_builder::*;
 
     pub struct ExpressionContainsVisitor {
@@ -124,6 +124,13 @@ pub mod base_internal{
         }
     }
 
+    pub fn gcd_function(args: &[Node]) -> Expression {
+        match args {
+            [Node::Num(a), Node::Num(b)] => Expression::new(num(gcd(*a, *b))),
+            _ => Expression::new(num(1))
+        }
+    }
+
     pub fn contains_expr(args: &[Node]) -> Expression {
         match args {
             [a, b] => if ExpressionContainsVisitor::new(Expression::new(b.clone())).visit(Expression::new(a.clone())) {
@@ -148,7 +155,8 @@ pub fn base_config() -> Script {
         RustInternalFunctionBuilder::new().name("_multiplyNumbers").args(&["a", "b"]).function(base_internal::multiply_nums).build(),
         RustInternalFunctionBuilder::new().name("_exponentiateNumbers").args(&["a", "b"]).function(base_internal::exponentiate_nums).build(),
         RustInternalFunctionBuilder::new().name("isNum").args(&["arg"]).function(base_internal::is_num).build(),
-        RustInternalFunctionBuilder::new().name("contains").args(&["a", "b"]).function(base_internal::contains_expr).build()
+        RustInternalFunctionBuilder::new().name("contains").args(&["a", "b"]).function(base_internal::contains_expr).build(),
+        RustInternalFunctionBuilder::new().name("_gcd").args(&["a", "b"]).function(base_internal::gcd_function).build()
     ];
 
     let mut base_hidden = Script::parse(default_script_hidden_functions).expect("Failed to parse base_hidden.hydra file");

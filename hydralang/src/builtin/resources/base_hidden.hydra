@@ -11,13 +11,21 @@ or(1, x) = 1
 or(x, 1) = 1
 or(0, 0) = 0 
 
+gcd(a, b) = _gcd(a, b) where { isNum(a), isNum(b) }
+
 # Ugly system function wrappers, basically if a evaluates to number and b evaluates to number we can perform primitive simplifications on them like you learned in primary school
-eval(a + b) = _addNumbers(eval(a), eval(b)) where { isNum(eval(a)), isNum(eval(b)) }
-eval(a - b) = _subtractNumbers(eval(a), eval(b)) where { isNum(eval(a)), isNum(eval(b)) }
-eval(a * b) = _multiplyNumbers(eval(a), eval(b)) where { isNum(eval(a)), isNum(eval(b)) }
-eval(a ^ b) = _exponentiateNumbers(eval(a), eval(b)) where { isNum(eval(a)), isNum(eval(b)) }
+eval(a + b) = _addNumbers(a, b) where { isNum(a), isNum(b) }
+eval(a - b) = _subtractNumbers(a, b) where { isNum(a), isNum(b) }
+eval(a * b) = _multiplyNumbers(a, b) where { isNum(a), isNum(b) }
+eval(a ^ b) = _exponentiateNumbers(a, b) where { isNum(a), isNum(b) }
 eval(a^1) = a
 eval(a/1) = a
-eval(a * x + b * x) = (a + b) * x where { isNum(eval(a)), isNum(eval(b)) }
+# eval(a/n) = (a / gcd(a, n)) / (n / gcd(a, n)) where { isNum(a), isNum(n) }
+
+eval(a * x + b * x) = (a + b) * x where { isNum(a), isNum(b) }
+eval(a * x - b * x) = (a - b) * x where { isNum(a), isNum(b) }
+eval(a1 / b1 + a2 / b2) = ((a1 * b2) + (a2 * b2)) / (b1 * b2) where { isNum(a1), isNum(a2), isNum(b1), isNum(b2) }
+
+
 
 eval(a) = a # eval should always default to the identity function if nothing can be done
