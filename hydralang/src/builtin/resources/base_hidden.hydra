@@ -18,4 +18,6 @@ eval(a * b) = _multiplyNumbers(eval(a), eval(b)) where { isNum(eval(a)), isNum(e
 eval(a ^ b) = _exponentiateNumbers(eval(a), eval(b)) where { isNum(eval(a)), isNum(eval(b)) }
 eval(a^1) = a
 eval(a/1) = a
+eval(a * x + b * x) = (a + b) * x where { isNum(eval(a)), isNum(eval(b)) }
+
 eval(a) = a # eval should always default to the identity function if nothing can be done
