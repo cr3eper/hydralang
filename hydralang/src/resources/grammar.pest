@@ -16,6 +16,9 @@ function_name = @{ "_"{0, 1} ~ ASCII_ALPHA+ }
 function_def  =  { function_head ~ statement ~ constraint{0, 1} ~ NEWLINE* }
 function_head =  { function_name ~ "(" ~ " "* ~ expr ~ (" "* ~ "," ~ " "* ~ expr ~ " "*)* ~ ")" ~ " "* ~ "=" }
 
+import = { "use" ~ var }
+annotation = { "@" ~ var }
+
 expr      = { token+ }
 statement = { expr ~ NEWLINE* }
-script    = { (function_def | statement | NEWLINE)+ }
+script    = { (import | annotation | function_def | statement | NEWLINE)+ }
