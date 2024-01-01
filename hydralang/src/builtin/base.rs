@@ -38,7 +38,9 @@ impl RustInternalFunctionBuilder {
 }
 
 pub mod base_internal{
-    use crate::{model::{expression::Node, Expression}, visitor::ImmutableExpressionVisitor, traits::DeepEq, algorithms::gcd};
+    use num_traits::Pow;
+
+    use crate::{model::{expression::Node, Expression, number::Number}, visitor::ImmutableExpressionVisitor, traits::DeepEq, algorithms::gcd};
     use crate::model::expression_builder::*;
 
     pub struct ExpressionContainsVisitor {
@@ -63,8 +65,8 @@ pub mod base_internal{
             self.visit_node(child)
         }
 
-        fn visit_num(&self, n: &i64) -> bool {
-            if Expression::new(num(*n)).deep_eq(&self.expected_expr) { return true; }
+        fn visit_num(&self, n: &Number) -> bool {
+            if Expression::new(Node::Num(n.clone())).deep_eq(&self.expected_expr) { return true; }
             false
         }
 
@@ -91,42 +93,42 @@ pub mod base_internal{
 
     pub fn add_nums(args: &[Node]) -> Expression {
         match args {
-            [Node::Num(a_value), Node::Num(b_value)] => Expression::new(Node::Num(a_value + b_value)),
+            [Node::Num(a_value), Node::Num(b_value)] => Expression::new(Node::Num(a_value.clone() + b_value.clone())),
             _ => panic!("Unexpected symbols in _addNumbers function")
         }
     }
 
     pub fn sub_nums(args: &[Node]) -> Expression {
         match args {
-            [Node::Num(a_value), Node::Num(b_value)] => Expression::new(Node::Num(a_value - b_value)),
+            [Node::Num(a_value), Node::Num(b_value)] => Expression::new(Node::Num(a_value.clone() - b_value.clone())),
             _ => panic!("Unexpected symbols in _subtractNumbers function")
         }
     }
 
     pub fn multiply_nums(args: &[Node]) -> Expression {
         match args {
-            [Node::Num(a_value), Node::Num(b_value)] => Expression::new(Node::Num(a_value * b_value)),
+            [Node::Num(a_value), Node::Num(b_value)] => Expression::new(Node::Num(a_value.clone() * b_value.clone())),
             _ => panic!("Unexpected symbols in _multiplyNumbers function")
         }
     }
 
     pub fn exponentiate_nums(args: &[Node]) -> Expression {
         match args {
-            [Node::Num(a_value), Node::Num(b_value)] => Expression::new(Node::Num(a_value.pow(*b_value as u32))),
+            [Node::Num(a_value), Node::Num(b_value)] => Expression::new(Node::Num(a_value.clone().pow(b_value.clone()))),
             _ => panic!("Unexpected symbols in _exponentiateNumbers function")
         }
     }
 
     pub fn is_num(args: &[Node]) -> Expression {
         match args {
-            [Node::Num(_)] => Expression::new(Node::Num(1)),
-            _ => Expression::new(Node::Num(0))
+            [Node::Num(_)] => Expression::new(num(1)),
+            _ => Expression::new(num(0))
         }
     }
 
     pub fn gcd_function(args: &[Node]) -> Expression {
         match args {
-            [Node::Num(a), Node::Num(b)] => Expression::new(num(gcd(*a, *b))),
+            //[Node::Num(a), Node::Num(b)] => Expression::new(num(gcd(*a, *b))), //TODO: GCD does not work after num changes
             _ => Expression::new(num(1))
         }
     }
@@ -138,7 +140,7 @@ pub mod base_internal{
             } else {
                 Expression::new(num(0))
             },
-            _ => Expression::new(Node::Num(0))
+            _ => Expression::new(num(0))
         }
     }
 

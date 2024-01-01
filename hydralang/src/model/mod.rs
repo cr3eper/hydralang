@@ -3,11 +3,10 @@ pub mod expression_builder;
 pub mod function;
 pub mod symbol_table;
 pub mod error;
+pub mod number;
 
 pub use expression::Expression;
 pub use script::Script;
-
-
 
 pub mod script {
     use std::collections::HashMap;

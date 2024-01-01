@@ -2,6 +2,8 @@
 
 use crate::model::expression::Node;
 
+use super::number::Number;
+
 pub fn op(op: &str, left: Node, right: Node) -> Node {
     Node::Op(op.to_string(), Box::new(left), Box::new(right))
 }
@@ -35,7 +37,7 @@ pub fn neg(node: Node) -> Node {
 }
 
 pub fn num(n: i64) -> Node {
-    Node::Num(n)
+    Node::Num(Number::new(n))
 }
 
 pub fn float(n: f64) -> Node {

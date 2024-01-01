@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 
 use crate::{traits::{ShallowEq, DeepEq}, parsing::parser::parse_statement};
 
-use super::{symbol_table::SymbolTable, error::DSLError};
+use super::{symbol_table::SymbolTable, error::DSLError, number::Number};
 
 /// A wrapper around Nodes, if you're doing something directly with Node types, consider thinking about how you could do it with this instead.
 #[derive(Debug, Clone)]
@@ -17,7 +17,7 @@ pub struct Expression {
 pub enum Node {
     Op(String, Box<Node>, Box<Node>),
     LOp(String, Box<Node>),
-    Num(i64),
+    Num(Number),
     Float(f64),
     Var(String),
     Vector(Vec<Node>),

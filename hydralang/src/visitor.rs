@@ -1,4 +1,4 @@
-use crate::{model::{Expression, expression::Node, Script, symbol_table::SymbolTable}, traits::DeepEq};
+use crate::{model::{Expression, expression::Node, Script, symbol_table::SymbolTable, number::Number}, traits::DeepEq};
 
 // TODO: Currently expressions are immutable and need to be completely rebuilt to be modified. This makes sense for now and helps avoid many bugs, but optimisations are possible that have not been implemneted
 // This is a basic left side, depth first traversal with no modifications made
@@ -22,7 +22,7 @@ pub trait ExpressionModfierVisitor {
 
     fn visit_lop(&mut self, op_type: String, child: Node) -> Node { Node::LOp(op_type, Box::new(self.visit_node(child))) }
 
-    fn visit_num(&mut self, n: i64) -> Node { Node::Num(n) }
+    fn visit_num(&mut self, n: Number) -> Node { Node::Num(n) }
 
     fn visit_float(&mut self, n: f64) -> Node { Node::Float(n) }
 
@@ -111,7 +111,7 @@ pub trait ImmutableExpressionVisitor<T> {
     
         fn visit_op(&self, op_type: &String, l: &Node, r: &Node) -> T;
         fn visit_lop(&self, op_type: &String, child: &Node) -> T;
-        fn visit_num(&self, n: &i64) -> T;
+        fn visit_num(&self, n: &Number) -> T;
         fn visit_float(&self, n: &f64) -> T;
         fn visit_var(&self, name: &String) -> T;
         fn visit_vec(&self, v: &Vec<Node>) -> T;

@@ -2,7 +2,7 @@
 
 // Parser is actually quite simple after tokenizer and shunting yard algorithm are applied, simply exists to map tokens to enums
 
-use crate::{model::{ Expression, Script, expression::Node, function::FunctionDef, error::DSLError }, parsing::tokenizer::{tokenize_statement, tokenize_script}, stack::Stack};
+use crate::{model::{ Expression, Script, expression::Node, function::FunctionDef, error::DSLError, number::Number }, parsing::tokenizer::{tokenize_statement, tokenize_script}, stack::Stack};
 use super::tokenizer::{OperandType, TokenStream};
 
 fn parse_tokens(tokens: TokenStream) -> Result<Expression, DSLError> {
@@ -22,7 +22,7 @@ fn parse_tokens(tokens: TokenStream) -> Result<Expression, DSLError> {
             super::tokenizer::Token::Operand(op) => {
                 operands.push(
                     match op {
-                        OperandType::Number(s) => Node::Num(s.parse().expect("ParserError, recognized number that is not a number")),
+                        OperandType::Number(s) => Node::Num(Number::parse(s.as_str())),
                         OperandType::Var(s) => Node::Var(s),
                         OperandType::Vector(v) => {
                             let mut parsed_vec = Vec::new();
