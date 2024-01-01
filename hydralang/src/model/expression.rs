@@ -222,6 +222,9 @@ impl Node {
                     symbol_lookup.insert(a.to_string(), Expression::new(b.clone()));
                     true
                 }
+            },
+            (Node::FunctionCall { name, args }, Node::FunctionCall { name: name2, args: args2 }) => {
+                name == name2 && args.len() == args2.len() && args.iter().zip(args2.iter()).all(|(a, b)| a.compare_to(b, symbol_lookup))
             }
             (_, _) => false
         }

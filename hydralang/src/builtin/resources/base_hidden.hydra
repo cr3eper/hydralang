@@ -20,6 +20,7 @@ eval(a * b) = _multiplyNumbers(a, b) where { isNum(a), isNum(b) }
 eval(a ^ b) = _exponentiateNumbers(a, b) where { isNum(a), isNum(b) }
 eval(a^1) = a
 eval(a/1) = a
+eval(1 * a) = a
 # eval(a/n) = (a / gcd(a, n)) / (n / gcd(a, n)) where { isNum(a), isNum(n) }
 
 eval(a * x + b * x) = (a + b) * x where { isNum(a), isNum(b) }

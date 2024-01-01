@@ -16,8 +16,11 @@ enum WindowReturn {
 }
 
 impl Display for WindowReturn {
-    fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        todo!()
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            WindowReturn::Exit => Ok(()),
+            WindowReturn::Error(e) => e.fmt(f),
+        }
     }
 }
 
