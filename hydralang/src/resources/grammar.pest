@@ -2,6 +2,7 @@ WHITESPACE = _{ " " }
 COMMENT = _{ "#" ~ (!("#"|NEWLINE) ~ ANY)* ~ ("#"|NEWLINE) } 
 
 number        = @{ ASCII_DIGIT+ }
+float         = @{ ASCII_DIGIT* ~ "." ~ ASCII_DIGIT+ }
 operator      =  { "+" | "-" | "*" | "/" | "^" | "$" | "%" }
 var           = @{ !("where") ~ ASCII_ALPHA+ }
 vector        =  { "(" ~ expr ~ ("," ~ expr)* ~ ")" }
