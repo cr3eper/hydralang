@@ -17,9 +17,18 @@ df(a * x ^ n, x) = (a * n) * x^(n-1) where { not(contains(a, x)), not(contains(n
 df(x ^ n, x) = n * x ^ (n - 1) where { not(contains(n, x)) }
 df(a * x, x) = a where { not(contains(a, x)) }
 
+df(u ^ n, x) = df(u, x) * n * u ^ (n - 1) where { not(contains(u, x)) }
+
 df(a * sin(x), x) = a * cos(x) where { not(contains(a, x)) }
 df(sin(x), x) = cos(x)
 df(a * sin(u), x) = a * df(u, x) * cos(u) where { not(contains(a, x)), contains(u, x) }
 df(sin(u), x) = df(u, x) * cos(u) where { contains(u, x) }
 
+cross((x1, y1, z1), (x2, y2, z2)) = (y1*z2 - y2*z1, 0 - (x1*z2 - z1*x2), x1*y2 - y1*x2)
+dot((x1, y1), (x2, y2)) = x1 * x2 + y1 * y2
+dot((x1, y1, z1), (x2, y2, z2)) = x1 * x2 + y1 * y2 + z1 * z2
 
+magnitude((x, y, z)) = sqrt(x^2 + y^2 + z^2)
+
+scalarProjection(u, v) = dot(u, v) / magnitude(v)
+vectorProjection(u, v) = (dot(v, u) / magnitude(u) ^ 2) * u

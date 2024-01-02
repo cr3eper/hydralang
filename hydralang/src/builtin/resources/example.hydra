@@ -1,0 +1,9 @@
+df(a + b, x) = df(a, x) + df(b, x)
+df(x^n, x) = n * x^(n - 1) where { not(contains(n, x)) }
+df(a * b, x) = a * df(b, x) + b * df(a, x)
+df(u^n, x) = df(u, x) * n * u^(n - 1) where { contains(u, x), not(contains(n, x)) }
+df(c, x) = 0 where { not(contains(c, x)) }
+df(x, x) = 1
+
+f(x) = 3 * x^2 + 2 * (2 * x + 2) ^ 2
+

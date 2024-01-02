@@ -223,6 +223,9 @@ impl Node {
                     true
                 }
             },
+            (Node::Vector(v1), Node::Vector(v2)) => {
+                v1.len() == v2.len() && v1.iter().zip(v2.iter()).all(|(a, b)| a.compare_to(b, symbol_lookup))
+            }
             (Node::FunctionCall { name, args }, Node::FunctionCall { name: name2, args: args2 }) => {
                 name == name2 && args.len() == args2.len() && args.iter().zip(args2.iter()).all(|(a, b)| a.compare_to(b, symbol_lookup))
             }

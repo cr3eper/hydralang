@@ -3,7 +3,7 @@ COMMENT = _{ "#" ~ (!("#"|NEWLINE) ~ ANY)* ~ ("#"|NEWLINE) }
 
 number        = @{ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT*){0, 1} }
 operator      =  { "+" | "-" | "*" | "/" | "^" | "$" | "%" }
-var           = @{ !("where") ~ ASCII_ALPHA+ }
+var           = @{ !("where") ~ ASCII_ALPHA ~ (ASCII_ALPHA | ASCII_DIGIT)* }
 vector        =  { "(" ~ expr ~ ("," ~ expr)* ~ ")" }
 function_call =  { function_name ~ "(" ~ expr ~ ("," ~ expr)* ~ ")" }
 

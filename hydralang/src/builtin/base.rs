@@ -150,6 +150,7 @@ pub fn base_config() -> Script {
 
     let default_script_hidden_functions = include_str!("resources/base_hidden.hydra");
     let default_script = include_str!("resources/base.hydra");
+    let example_script = include_str!("resources/example.hydra");
 
     let function_defs = vec![
         RustInternalFunctionBuilder::new().name("_addNumbers").args(&["a", "b"]).function(base_internal::add_nums).build(),
@@ -165,7 +166,9 @@ pub fn base_config() -> Script {
     base_hidden.hide_all_function_defs();
     
 
-    let mut base = Script::parse(default_script).expect("Failed to parse base.hydra file");
+    //let mut base = Script::parse(default_script).expect("Failed to parse base.hydra file");
+    let mut base = Script::parse(example_script).unwrap();
+    //let mut base = Script::new(Vec::new(), Vec::new());
 
     base.merge(&Script::new( function_defs, Vec::new()));
     base.merge(&base_hidden);
