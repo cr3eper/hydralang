@@ -112,11 +112,26 @@ Now we get our answer
 Yeah I don't know why it's not simplifying either :P it's technically correct though. This is a WIP project after all.
 
 
+## 3. Compound Interest Calculations
+
+I want to calculate how much money I would have from a 7% interest (p.a) investment with a 10,000 dollar deposit over 5 years.
+
+Easy.
+
+```
+calculateInterest(amount, rate, 0) = amount
+calculateInterest(amount, rate, times) = calculateInterest(amount + amount * rate, rate, times - 1)
+
+calculateInterest(10000, 0.07, 5)
+```
+
+Answer
+```
+14025.5173070000
+```
 
 
-
-
-## 3. Consider the following lines in **R<sup>3</sup>**
+## 4. Consider the following lines in **R<sup>3</sup>**
 
 - u(t) = (0, -1, -1) + t(4, 2, 0)
 - v(s) = (7, -7, 4) + s(1, 1, 4)
