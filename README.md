@@ -113,13 +113,6 @@ Yeah I don't know why it's not simplifying either :P it's technically correct th
 
 
 
-```
-df(a + b, x) = df(a, x) + df(b, x)          # derivative is distributive over '+'
-df(c, x) = 0 where { not(contains(c, x)) }  # derivative of a constant is 0
-df(x, x) = 1
-
-```
-
 
 
 
