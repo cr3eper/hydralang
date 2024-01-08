@@ -1,7 +1,8 @@
-
+use std::env;
 use std::error::Error;
 use std::fmt::Display;
-use std::io::{Write, self, Stdout};
+use std::fs::File;
+use std::io::{Write, self, Stdout, Read};
 use crossterm::event::{Event, KeyModifiers, KeyCode, KeyEventKind};
 use crossterm::style::Print;
 use crossterm::{ cursor, execute, event::read};
@@ -153,16 +154,41 @@ fn mainloop() -> Result<(), Box<dyn Error>> {
 
 fn main() -> Result<(), Box<dyn Error>>{
 
-    
-    enable_raw_mode()?;
-    mainloop()?;
+    let args: Vec<String> = env::args().collect();
 
-    execute!(
-        io::stdout(),
-        Clear(ClearType::All)
-    )?;
+    // Interactive Mode
+    if args.len() <= 1 {
+        enable_raw_mode()?;
+        mainloop()?;
 
-    disable_raw_mode()?;
+        execute!(
+            io::stdout(),
+            Clear(ClearType::All)
+        )?;
+
+        disable_raw_mode()?;
+
+    } else {
+        let mut file = File::open(args.get(1).unwrap())?;
+        println!("Executing file {}", args.get(0).unwrap());
+        let mut source = String::new();
+        file.read_to_string(&mut source)?;
+
+        let mut base = base_config();
+        let script = Script::parse(&source)?;
+
+        base.merge(&script);
+
+        base.run();
+
+        println!("{}", base.to_string());
+
+    }
 
     Ok(())
 }
+
+
+
+
+
