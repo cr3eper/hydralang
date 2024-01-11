@@ -27,12 +27,6 @@ eval(a + 0) = a
 eval(0 + a) = a
 eval(0 * a) = 0
 eval(a * 0) = 0
-eval(a * (b + c)) = a * b + a * c # TODO: Spread operator is pretty much essential for stuff like this
-eval(a * b * x) = (a * b) * x where { isNum(a), isNum(b) }
-# eval(a/n) = (a / gcd(a, n)) / (n / gcd(a, n)) where { isNum(a), isNum(n) }
 
-eval(a1 / b1 + a2 / b2) = ((a1 * b2) + (a2 * b2)) / (b1 * b2) where { isNum(a1), isNum(a2), isNum(b1), isNum(b2) }
-
-
-
+@lazy
 eval(a) = a # eval should always default to the identity function if nothing can be done

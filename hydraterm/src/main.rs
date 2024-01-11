@@ -170,7 +170,7 @@ fn main() -> Result<(), Box<dyn Error>>{
 
     } else {
         let mut file = File::open(args.get(1).unwrap())?;
-        println!("Executing file {}", args.get(0).unwrap());
+        println!("Executing file at {}", args.get(0).unwrap());
         let mut source = String::new();
         file.read_to_string(&mut source)?;
 

@@ -40,7 +40,7 @@ impl RustInternalFunctionBuilder {
 pub mod base_internal{
     use num_traits::Pow;
 
-    use crate::{model::{expression::Node, Expression, number::Number}, visitor::ImmutableExpressionVisitor, traits::DeepEq, algorithms::gcd};
+    use crate::{model::{expression::Node, Expression, number::Number}, visitor::ImmutableExpressionVisitor, traits::DeepEq};
     use crate::model::expression_builder::*;
 
     pub struct ExpressionContainsVisitor {

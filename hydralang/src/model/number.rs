@@ -3,7 +3,7 @@ use std::str::FromStr;
 use std::ops::{Add, Sub, Mul, Div};
 
 use bigdecimal::BigDecimal;
-use num_traits::{Pow, Num};
+use num_traits::Pow;
 
 #[derive(Clone, Debug)]
 pub enum Number {

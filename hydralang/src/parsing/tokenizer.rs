@@ -28,6 +28,7 @@ pub struct TokenFunctionDef {
     pub name: String,
     pub args: Vec<TokenStream>,
     pub tokens: TokenStream,
+    pub annotations: Vec<String>,
     pub constraints: Vec<TokenStream>
 }
 
@@ -61,6 +62,7 @@ pub fn tokenize_script(input: &str) -> Result<TokenizedScript, DSLError> {
 
     let parse = attempted_parse.unwrap().next().unwrap();
 
+    let mut annotations = Vec::new();
 
     for line in parse.into_inner() {
         match line.as_rule() {
@@ -81,8 +83,16 @@ pub fn tokenize_script(input: &str) -> Result<TokenizedScript, DSLError> {
                     constraints = parse_constraint(c.into_inner())?
                 }
                 
-                function_defs.push(TokenFunctionDef { name: name, args: args, tokens: tokens, constraints: constraints })
-                },
+                function_defs.push(TokenFunctionDef { name: name, args: args, tokens: tokens, annotations: annotations.clone(), constraints: constraints });
+                annotations.clear();
+            },
+            Rule::annotation => {
+                let var_pair = line.into_inner().next().unwrap();
+                annotations.push(match var_pair.as_rule() {
+                    Rule::var => { var_pair.as_str().to_string() },
+                    _ => return Err(DSLError::LexerError("Unable to parse annotation, wrong type provided".to_string(), None))
+                })
+            }
             Rule::statement => {
                 let tokens: Vec<Token> = shunting_yard(internal_tokenize(line.into_inner().next().expect("Statement without expression should be impossible").into_inner())?)?;
                 token_streams.push(tokens);
@@ -96,16 +106,11 @@ pub fn tokenize_script(input: &str) -> Result<TokenizedScript, DSLError> {
     
 }
 
-pub fn tokenize_function(input: &str) -> TokenFunctionDef {
 
-    let _parse = Tokenizer::parse(Rule::function_def, input).expect("Failed Lexer Stage").next().unwrap();
-    todo!()
-
-}
 
 pub fn tokenize_statement(input: &str) -> Result<TokenStream, DSLError> {
 
-    let parse = Tokenizer::parse(Rule::statement, input).expect("Failed Lexer Stage").next().unwrap();
+    let parse = Tokenizer::parse(Rule::statement, input).unwrap().next().unwrap();
 
     shunting_yard(internal_tokenize(parse.into_inner().next().unwrap().into_inner())?)
 }

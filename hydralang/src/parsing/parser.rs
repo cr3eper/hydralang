@@ -84,7 +84,8 @@ pub fn parse_script(input: &str) -> Result<Script, DSLError> {
             function.name, 
             parsed_function_args, 
             parse_tokens(function.tokens)?, 
-            parsed_constraints
+            parsed_constraints,
+            function.annotations.clone()
         );
 
         script.add_function_def(parsed_function);
@@ -128,6 +129,17 @@ mod tests{
         fact(0) = 1";
 
         let _ = parse_script(test).unwrap();
+    }
+
+    #[test]
+    fn test_lazy_function() {
+        let test = "@lazy
+        f(x) = x^2
+        f(a + b) = a^2 + 2*a*b + b^2
+        f(x + y)
+        ";
+
+        let script = parse_script(test).unwrap();
     }
 
 

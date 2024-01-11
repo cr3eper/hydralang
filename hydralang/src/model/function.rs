@@ -53,6 +53,7 @@ pub struct FunctionDef {
     args: Vec<Expression>,
     expr: Rc<dyn Callable>,
     constraints: Vec<Expression>,
+    annotations: Vec<String>,
     is_system_function: bool // Some functions require a system based implementation
 }
 
@@ -87,12 +88,12 @@ impl ToString for FunctionDef {
 
 impl FunctionDef {
 
-    pub fn new(name: String, args: Vec<Expression>, expr: Expression, constraints: Vec<Expression>) -> Self {
-        FunctionDef { name, args, expr: Rc::new(ExpressionTemplate::new(expr)) as Rc<dyn Callable> ,  constraints, is_system_function: false }
+    pub fn new(name: String, args: Vec<Expression>, expr: Expression, constraints: Vec<Expression>, annotations: Vec<String>) -> Self {
+        FunctionDef { name, args, expr: Rc::new(ExpressionTemplate::new(expr)) as Rc<dyn Callable>, constraints, annotations, is_system_function: false }
     }
 
     pub fn new_system_function_def(name: String, args: Vec<Expression>, internal_function: RustInternalFunction, constraints: Vec<Expression>) -> Self {
-        FunctionDef { name, args, expr: Rc::new(internal_function) as Rc<dyn Callable> ,  constraints, is_system_function: true }
+        FunctionDef { name, args, expr: Rc::new(internal_function) as Rc<dyn Callable> , annotations: Vec::new(), constraints, is_system_function: true }
     }
 
     pub fn get_name(&self) -> &String {
@@ -105,6 +106,10 @@ impl FunctionDef {
 
     pub fn hide(&mut self) {
         self.is_system_function = true;
+    }
+
+    pub fn get_annotations(&self) -> &Vec<String> {
+        &self.annotations
     }
 
     pub fn try_apply<'a>(&self, input_args: &'a Vec<Expression>, script: &'a Script) -> Option<Expression> {
@@ -152,9 +157,20 @@ impl FunctionCollection {
         }
     }
 
+    fn contains_lazy(f: &FunctionDef) -> bool {
+        f.get_annotations().contains(&"lazy".to_string())
+    }
+
     pub fn try_apply<'a>(&self, args: &'a Vec<Expression>, script: &'a Script) -> Option<Expression> {
 
-        for func in self.function_defs.iter() {
+        for func in self.function_defs.iter().filter(|f| !Self::contains_lazy(f)) {
+            if let Some(result) = func.try_apply(args, script) {
+                return Some(result);
+            }
+        }
+
+        // We currently iter through the whole function_defs list twice to account for lazy definitions, for now this is fine
+        for func in self.function_defs.iter().filter(|f| Self::contains_lazy(f)) {
             if let Some(result) = func.try_apply(args, script) {
                 return Some(result);
             }
